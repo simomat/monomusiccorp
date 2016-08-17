@@ -2,3 +2,4 @@ build
 derby.log
 .gradle/
 
+classes/
