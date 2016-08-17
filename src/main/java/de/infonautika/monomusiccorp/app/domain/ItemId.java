@@ -1,4 +1,4 @@
-package de.infonautika.monomusiccorp.app;
+package de.infonautika.monomusiccorp.app.domain;
 
 import java.io.Serializable;
 import java.util.Objects;

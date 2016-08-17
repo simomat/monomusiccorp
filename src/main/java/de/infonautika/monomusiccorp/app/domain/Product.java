@@ -1,4 +1,4 @@
-package de.infonautika.monomusiccorp.app;
+package de.infonautika.monomusiccorp.app.domain;
 
 import javax.persistence.Basic;
 import javax.persistence.Entity;

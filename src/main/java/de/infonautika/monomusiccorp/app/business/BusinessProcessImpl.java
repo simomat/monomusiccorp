@@ -1,6 +1,8 @@
-package de.infonautika.monomusiccorp.app;
+package de.infonautika.monomusiccorp.app.business;
 
 
+import de.infonautika.monomusiccorp.app.domain.Product;
+import de.infonautika.monomusiccorp.app.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

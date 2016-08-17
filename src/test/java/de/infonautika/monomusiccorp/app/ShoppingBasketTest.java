@@ -1,5 +1,8 @@
 package de.infonautika.monomusiccorp.app;
 
+import de.infonautika.monomusiccorp.app.domain.ItemId;
+import de.infonautika.monomusiccorp.app.domain.Position;
+import de.infonautika.monomusiccorp.app.domain.ShoppingBasket;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;

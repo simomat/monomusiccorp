@@ -1,6 +1,6 @@
-package de.infonautika.monomusiccorp.app;
+package de.infonautika.monomusiccorp.app.business;
 
-import de.infonautika.monomusiccorp.app.Product;
+import de.infonautika.monomusiccorp.app.domain.Product;
 
 import java.util.Collection;
 
