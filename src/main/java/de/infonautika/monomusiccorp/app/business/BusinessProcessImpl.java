@@ -1,6 +1,7 @@
 package de.infonautika.monomusiccorp.app.business;
 
 
+import de.infonautika.monomusiccorp.app.domain.ItemId;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.domain.StockItem;
 import de.infonautika.monomusiccorp.app.repository.ProductRepository;
@@ -45,5 +46,17 @@ public class BusinessProcessImpl implements BusinessProcess {
     @Override
     public Collection<Product> getAllProducts() {
         return productRepo.findAll();
+    }
+
+    @Override
+    public void addItemToStock(ItemId itemId, Long count) {
+        StockItem stockItem = stockItemRepository.findByProductId(itemId.getId());
+        stockItem.setQuantity(stockItem.getQuantity()+count);
+        stockItemRepository.save(stockItem);
+    }
+
+    @Override
+    public Collection<StockItem> getStocks() {
+        return stockItemRepository.findAll();
     }
 }
