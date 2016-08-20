@@ -2,33 +2,21 @@ package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.domain.ItemId;
-import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.domain.StockItem;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collection;
 
 @RestController
+@RequestMapping("/stock")
 public class StockController {
 
     @Autowired
     private BusinessProcess businessProcess;
-
-    @RequestMapping("/")
-    public String index() {
-        return "Greetings from Spring Boot!";
-    }
-
-    @RequestMapping("/createdb")
-    public void createDB() {
-        businessProcess.createDatabase();
-    }
-
-    @RequestMapping("/products")
-    public Collection<Product> products() {
-        return businessProcess.getAllProducts();
-    }
 
     @RequestMapping("/newstockitem")
     @PostMapping
@@ -39,6 +27,7 @@ public class StockController {
     @RequestMapping("/stock")
     public Collection<StockItem> getStockItems() {
         return businessProcess.getStocks();
+
     }
 
 

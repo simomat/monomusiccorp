@@ -1,7 +1,7 @@
 package de.infonautika.monomusiccorp.app.domain;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import de.infonautika.monomusiccorp.app.serializer.ItemIdSerializer;
+import de.infonautika.monomusiccorp.app.serialize.ItemIdSerializer;
 
 import javax.persistence.Basic;
 import javax.persistence.Entity;

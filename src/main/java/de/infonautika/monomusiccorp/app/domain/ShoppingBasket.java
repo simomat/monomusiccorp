@@ -8,9 +8,9 @@ import static java.util.stream.Collectors.toList;
 
 public class ShoppingBasket {
 
-    List<Position> positions = new ArrayList<>();
+    private List<Position> positions = new ArrayList<>();
 
-    public void put(ItemId itemId, Integer quantity) {
+    public void put(ItemId itemId, Long quantity) {
         if (positionExists(itemId)) {
             updatePositionQuantity(itemId, quantity);
         } else {
@@ -19,7 +19,7 @@ public class ShoppingBasket {
         removeQuantitiesBelowOne();
     }
 
-    private void updatePositionQuantity(ItemId itemId, Integer quantity) {
+    private void updatePositionQuantity(ItemId itemId, Long quantity) {
         positions = positions.stream()
                 .map(p -> p.getItemId().equals(itemId) ? new Position(itemId, p.getQuantity() + quantity) : p)
                 .collect(toList());
@@ -35,7 +35,7 @@ public class ShoppingBasket {
                 .collect(toList());
     }
 
-    public void remove(ItemId itemId, Integer quantity) {
+    public void remove(ItemId itemId, Long quantity) {
         put(itemId, -quantity);
     }
 

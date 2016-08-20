@@ -5,9 +5,9 @@ import java.util.Objects;
 
 public class Position {
     final private ItemId itemId;
-    final private Integer quantity;
+    final private Long quantity;
 
-    public Position(@NotNull ItemId itemId, @NotNull Integer amount) {
+    public Position(@NotNull ItemId itemId, @NotNull Long amount) {
         this.itemId = itemId;
         this.quantity = amount;
     }
@@ -16,11 +16,11 @@ public class Position {
         return itemId;
     }
 
-    public Integer getQuantity() {
+    public Long getQuantity() {
         return quantity;
     }
 
-    public Position update(int newQuantity) {
+    public Position update(long newQuantity) {
         return new Position(itemId, newQuantity);
     }
 

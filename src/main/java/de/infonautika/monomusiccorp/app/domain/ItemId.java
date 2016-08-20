@@ -1,8 +1,14 @@
 package de.infonautika.monomusiccorp.app.domain;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import de.infonautika.monomusiccorp.app.serialize.ItemIdDeserializer;
+import de.infonautika.monomusiccorp.app.serialize.ItemIdSerializer;
+
 import java.io.Serializable;
 import java.util.Objects;
 
+@JsonDeserialize(using = ItemIdDeserializer.class)
 public class ItemId implements Serializable {
     private String id;
 

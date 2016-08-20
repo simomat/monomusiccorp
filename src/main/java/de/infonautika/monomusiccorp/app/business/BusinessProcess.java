@@ -14,4 +14,6 @@ public interface BusinessProcess {
     void addItemToStock(ItemId itemId, Long count);
 
     Collection<StockItem> getStocks();
+
+    void putToBasket(ItemId itemId, Long quantity);
 }

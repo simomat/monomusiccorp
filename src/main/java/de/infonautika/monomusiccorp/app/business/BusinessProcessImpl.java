@@ -3,6 +3,7 @@ package de.infonautika.monomusiccorp.app.business;
 
 import de.infonautika.monomusiccorp.app.domain.ItemId;
 import de.infonautika.monomusiccorp.app.domain.Product;
+import de.infonautika.monomusiccorp.app.domain.ShoppingBasket;
 import de.infonautika.monomusiccorp.app.domain.StockItem;
 import de.infonautika.monomusiccorp.app.repository.ProductRepository;
 import de.infonautika.monomusiccorp.app.repository.StockItemRepository;
@@ -58,5 +59,11 @@ public class BusinessProcessImpl implements BusinessProcess {
     @Override
     public Collection<StockItem> getStocks() {
         return stockItemRepository.findAll();
+    }
+
+    @Override
+    public void putToBasket(ItemId itemId, Long quantity) {
+        ShoppingBasket shoppingBasket = new ShoppingBasket();
+        shoppingBasket.put(itemId, quantity);
     }
 }

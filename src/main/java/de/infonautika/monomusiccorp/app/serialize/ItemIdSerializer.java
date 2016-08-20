@@ -1,4 +1,4 @@
-package de.infonautika.monomusiccorp.app.serializer;
+package de.infonautika.monomusiccorp.app.serialize;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -12,7 +12,7 @@ import java.io.IOException;
 @Component
 public class ItemIdSerializer extends JsonSerializer<ItemId> {
     @Override
-    public void serialize(ItemId value, JsonGenerator gen, SerializerProvider serializers) throws IOException, JsonProcessingException {
+    public void serialize(ItemId value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
         gen.writeString(value.getId());
     }
 }
