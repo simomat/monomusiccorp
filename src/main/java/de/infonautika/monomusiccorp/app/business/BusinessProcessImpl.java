@@ -1,18 +1,19 @@
 package de.infonautika.monomusiccorp.app.business;
 
 
-import de.infonautika.monomusiccorp.app.domain.ItemId;
-import de.infonautika.monomusiccorp.app.domain.Product;
-import de.infonautika.monomusiccorp.app.domain.ShoppingBasket;
-import de.infonautika.monomusiccorp.app.domain.StockItem;
+import de.infonautika.monomusiccorp.app.domain.*;
 import de.infonautika.monomusiccorp.app.repository.ProductRepository;
 import de.infonautika.monomusiccorp.app.repository.StockItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.naming.OperationNotSupportedException;
 import java.util.Collection;
+import java.util.List;
 
+import static de.infonautika.streamjoin.Join.join;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class BusinessProcessImpl implements BusinessProcess {
@@ -22,6 +23,8 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     @Autowired
     private StockItemRepository stockItemRepository;
+
+    ShoppingBasket shoppingBasket = new ShoppingBasket();
 
     @Override
     public void createDatabase() {
@@ -62,8 +65,30 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     @Override
-    public void putToBasket(ItemId itemId, Long quantity) {
-        ShoppingBasket shoppingBasket = new ShoppingBasket();
-        shoppingBasket.put(itemId, quantity);
+    public void putToBasket(Quantity<ItemId> quantity) {
+        shoppingBasket.put(quantity.getItem(), quantity.getQuantity());
     }
+
+    @Override
+    public List<Quantity<Product>> getBasketContent() {
+        List<Position> positions = shoppingBasket.getPositions();
+        List<String> ids = positions.stream()
+                .map(p -> p.getItemId().getId())
+                .collect(toList());
+        List<Product> products = productRepo.findByIdIn(ids);
+
+        return join(positions.stream())
+                .withKey(Position::getItemId)
+                .on(products.stream())
+                .withKey(Product::getItemId)
+                .combine((pos, prod) -> Quantity.create(prod, pos.getQuantity()))
+                .collect(toList());
+    }
+
+    @Override
+    public void removeFromBasket(Quantity<ItemId> quantity) {
+        shoppingBasket.remove(quantity.getItem(), quantity.getQuantity());
+    }
+
+
 }

@@ -17,7 +17,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class StockControllerTest {
 
@@ -40,6 +39,6 @@ public class StockControllerTest {
 
         mvc.perform(get("/stock/stock"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("[null]"));
+                .andExpect(content().json("[null]"));
     }
 }

@@ -1,5 +1,5 @@
-build
+build/
 derby.log
 .gradle/
-
 classes/
+.idea/

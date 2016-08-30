@@ -6,6 +6,7 @@ repositories {
     // Use 'jcenter' for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    mavenLocal()
 }
 
 dependencies {
@@ -17,6 +18,7 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-data-jpa:1.4.0.RELEASE'){
         exclude group: 'org.hibernate', module: 'hibernate-entitymanager'
     }
+    compile('de.infonautika.streamjoin:streamjoin:1.0-SNAPSHOT')
 
     testCompile('junit:junit:4.12')
     testCompile('org.hamcrest:hamcrest-core:1.3')
