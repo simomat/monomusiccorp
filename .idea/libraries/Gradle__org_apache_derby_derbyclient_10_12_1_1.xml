@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Gradle: org.apache.derby:derbyclient:10.12.1.1">
-    <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.derby/derbyclient/10.12.1.1/a3587be0bb338ee5f2d6758eac2f6defe3e27c8b/derbyclient-10.12.1.1.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
