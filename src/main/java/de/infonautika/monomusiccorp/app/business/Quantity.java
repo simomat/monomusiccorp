@@ -1,10 +1,21 @@
 package de.infonautika.monomusiccorp.app.business;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Objects;
 
 public class Quantity<T> {
     private T item;
     private Long quantity;
+
+    @JsonCreator
+    public Quantity(
+            @JsonProperty(value = "item", required = true) T item,
+            @JsonProperty(value = "quantity", required = true) Long quantity) {
+        this.item = item;
+        this.quantity = quantity;
+    }
 
     public T getItem() {
         return item;
@@ -23,10 +34,7 @@ public class Quantity<T> {
     }
 
     public static <T> Quantity<T> create(T item, Long quantity) {
-        Quantity<T> tQuantity = new Quantity<>();
-        tQuantity.setItem(item);
-        tQuantity.setQuantity(quantity);
-        return tQuantity;
+        return new Quantity<>(item, quantity);
     }
 
     @Override

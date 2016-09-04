@@ -1,6 +1,7 @@
 package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
+import de.infonautika.monomusiccorp.app.business.Quantity;
 import de.infonautika.monomusiccorp.app.domain.ItemId;
 import de.infonautika.monomusiccorp.app.domain.StockItem;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +21,8 @@ public class StockController {
 
     @RequestMapping("/newstockitem")
     @PostMapping
-    public void newStockItem(@RequestBody StockItemSupply supply) {
-        businessProcess.addItemToStock(new ItemId(supply.getId()), supply.getQuantity());
+    public void newStockItem(@RequestBody Quantity<ItemId> supply) {
+        businessProcess.addItemToStock(supply);
     }
 
     @RequestMapping("/stock")

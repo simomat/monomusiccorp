@@ -53,9 +53,9 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     @Override
-    public void addItemToStock(ItemId itemId, Long count) {
-        StockItem stockItem = stockItemRepository.findByProductId(itemId.getId());
-        stockItem.setQuantity(stockItem.getQuantity()+count);
+    public void addItemToStock(Quantity<ItemId> quantity) {
+        StockItem stockItem = stockItemRepository.findByProductId(quantity.getItem().getId());
+        stockItem.setQuantity(stockItem.getQuantity()+quantity.getQuantity());
         stockItemRepository.save(stockItem);
     }
 

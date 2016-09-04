@@ -52,7 +52,7 @@ public class ShoppingControllerTest {
 
         mvc.perform(put("/shopping/basket/put")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"item\": {\"id\":\"34\"}, \"quantity\": 5}"))
+                .content("{\"item\": {\"itemId\":\"34\"}, \"quantity\": 5}"))
                 .andExpect(status().isOk());
 
         verify(businessProcess).putToBasket(Quantity.create(new ItemId("34"), 5L));
@@ -62,7 +62,7 @@ public class ShoppingControllerTest {
     public void removeFromBasket() throws Exception {
         mvc.perform(delete("/shopping/basket/remove")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"item\": {\"id\":\"34\"}, \"quantity\": 1}"))
+                .content("{\"item\": {\"itemId\":\"34\"}, \"quantity\": 1}"))
                 .andExpect(status().isOk());
 
         verify(businessProcess).removeFromBasket(Quantity.create(new ItemId("34"), 1L));

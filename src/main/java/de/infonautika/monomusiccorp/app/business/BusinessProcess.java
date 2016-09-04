@@ -12,7 +12,7 @@ public interface BusinessProcess {
 
     Collection<Product> getAllProducts();
 
-    void addItemToStock(ItemId itemId, Long count);
+    void addItemToStock(Quantity<ItemId> quantity);
 
     Collection<StockItem> getStocks();
 

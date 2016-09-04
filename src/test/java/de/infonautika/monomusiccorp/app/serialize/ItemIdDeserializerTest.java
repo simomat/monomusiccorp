@@ -20,7 +20,7 @@ public class ItemIdDeserializerTest {
 
     @Test
     public void deserializeCorrectly() throws Exception {
-        ItemId itemId = objectMapper.readValue("{\"id\": \"42\", \"asd\":2}", ItemId.class);
+        ItemId itemId = objectMapper.readValue("{\"itemId\": \"42\", \"asd\":2}", ItemId.class);
 
         assertThat(itemId.getId(), equalTo("42"));
     }
@@ -32,6 +32,6 @@ public class ItemIdDeserializerTest {
 
     @Test(expected = JsonParseException.class)
     public void failOnIdIsNoString() throws Exception {
-        objectMapper.readValue("{\"id\": {\"x\":2}}", ItemId.class);
+        objectMapper.readValue("{\"itemId\": {\"x\":2}}", ItemId.class);
     }
 }

@@ -28,7 +28,7 @@ public class ItemIdDeserializer extends JsonDeserializer<ItemId> {
     }
 
     private TreeNode getIdNode(TreeNode treeNode) throws JsonParseException {
-        TreeNode idNode = treeNode.get("id");
+        TreeNode idNode = treeNode.get("itemId");
         checkIdNode(idNode);
         return idNode;
     }
@@ -50,7 +50,7 @@ public class ItemIdDeserializer extends JsonDeserializer<ItemId> {
     }
 
     private void checkIdNode(TreeNode idNode) throws JsonParseException {
-        checkForNull(idNode, "id field not given");
+        checkForNull(idNode, "itemId field not given");
         if (!(idNode instanceof TextNode)) {
             throw new JsonParseException(currentParser, "given id field is not a string");
         }
