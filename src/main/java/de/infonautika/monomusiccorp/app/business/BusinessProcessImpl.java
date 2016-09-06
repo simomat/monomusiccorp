@@ -1,16 +1,20 @@
 package de.infonautika.monomusiccorp.app.business;
 
 
+import de.infonautika.monomusiccorp.app.controller.CustomerInfo;
 import de.infonautika.monomusiccorp.app.domain.*;
+import de.infonautika.monomusiccorp.app.repository.CustomerRepository;
 import de.infonautika.monomusiccorp.app.repository.ProductRepository;
 import de.infonautika.monomusiccorp.app.repository.StockItemRepository;
+import de.infonautika.monomusiccorp.app.security.SecurityService;
+import de.infonautika.monomusiccorp.app.util.ResultStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.naming.OperationNotSupportedException;
 import java.util.Collection;
 import java.util.List;
 
+import static de.infonautika.monomusiccorp.app.util.ResultStatus.isOk;
 import static de.infonautika.streamjoin.Join.join;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -23,6 +27,14 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     @Autowired
     private StockItemRepository stockItemRepository;
+
+    @Autowired
+    private CustomerRepository cusomerRepository;
+
+    @Autowired
+    private SecurityService securityService;
+
+
 
     ShoppingBasket shoppingBasket = new ShoppingBasket();
 
@@ -90,5 +102,21 @@ public class BusinessProcessImpl implements BusinessProcess {
         shoppingBasket.remove(quantity.getItem(), quantity.getQuantity());
     }
 
+    @Override
+    public ResultStatus addCustomer(CustomerInfo customer) {
+        ResultStatus resultStatus = securityService.addUser(customer);
+        if (!isOk(resultStatus)) {
+            return resultStatus;
+        }
+
+        createCustomer(customer);
+        return ResultStatus.OK;
+    }
+
+    private void createCustomer(CustomerInfo customerInfo) {
+        Customer customer = new Customer();
+        customer.setUsername(customerInfo.getUsername());
+        cusomerRepository.save(customer);
+    }
 
 }

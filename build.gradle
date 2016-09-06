@@ -35,12 +35,11 @@ dependencies {
     compile('org.springframework.data:spring-data-jpa')
     compile('org.springframework.boot:spring-boot-starter-web')
 
-//    compile('org.springframework.security:spring-security-config')
-
-//    compile('org.springframework.boot:spring-boot-starter-actuator')
-//    compile('org.springframework.boot:spring-boot-starter-security')
-//    compile('org.springframework.security:spring-security-web')
-//    compile('org.springframework.boot:spring-boot-starter-thymeleaf')
+    compile('org.springframework.security:spring-security-config')
+    compile('org.springframework.boot:spring-boot-starter-actuator')
+    compile('org.springframework.boot:spring-boot-starter-security')
+    compile('org.springframework.security:spring-security-web')
+    compile('org.springframework.boot:spring-boot-starter-thymeleaf')
 
     compile('org.springframework.boot:spring-boot-starter-data-jpa'){
         exclude group: 'org.hibernate', module: 'hibernate-entitymanager'

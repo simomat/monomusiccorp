@@ -2,21 +2,23 @@ package de.infonautika.monomusiccorp.app;
 
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaBaseConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.orm.jpa.vendor.AbstractJpaVendorAdapter;
 import org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter;
-//import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-//import org.springframework.security.config.annotation.authentication.configuration.EnableGlobalAuthentication;
-//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-//import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-//import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.transaction.jta.JtaTransactionManager;
 
 import javax.sql.DataSource;
@@ -45,28 +47,28 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
         return singletonMap("eclipselink.weaving", "false");
     }
 
+    @Configuration
+    @EnableWebSecurity
+    @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
+    protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
 
-//    @Configuration
-//    @EnableWebSecurity
-//    @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
-//    protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
-//
-//        @Override
-//        protected void configure(HttpSecurity http) throws Exception {
-////            http.authorizeRequests().antMatchers("/**").authenticated().and().httpBasic();
-//            http.authorizeRequests().antMatchers("/**").permitAll().and().httpBasic();
-//
-////            http.authorizeRequests().anyRequest().fullyAuthenticated().and().formLogin()
-////                    .loginPage("/login").failureUrl("/login?error").permitAll().and()
-////                    .logout().permitAll();
-//        }
-//
-//        @Override
-//        public void configure(AuthenticationManagerBuilder auth) throws Exception {
-//            auth.inMemoryAuthentication().withUser("admin").password("admin")
-//                    .roles("ADMIN", "USER").and().withUser("user").password("user")
-//                    .roles("USER");
-//        }
-//
-//    }
+        private UserDetailsManager userDetailsManager;
+
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
+            http.csrf().disable().authorizeRequests().antMatchers("/**").authenticated().and().httpBasic();
+        }
+
+        @Autowired
+        public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
+            userDetailsManager = auth.inMemoryAuthentication().withUser("admin").password("admin")
+                    .roles("ADMIN", "USER").and().getUserDetailsService();
+        }
+
+        @Bean
+        public UserDetailsManager getUserDetailsManager() {
+            return userDetailsManager;
+        }
+
+    }
 }

@@ -1,8 +1,10 @@
 $(document).ready(function(){
 
-    $.ajaxSetup({error: function(jqXHR, textStatus, errorThrown){
-        alert(jqXHR.responseText)
-    }})
+    $.ajaxSetup({
+        error: function(jqXHR, textStatus, errorThrown){
+            alert(jqXHR.responseText)},
+        cache: false
+    })
 
     var post = 'POST'
     var put = 'PUT'
@@ -35,6 +37,7 @@ $(document).ready(function(){
 
     bindGet('#test', '/app/')
     bindGet('#createdb', '/app/createdb')
+    bindSend('#createcustomer', '/app/addCustomer', post)
 
     bindGet('#getproducts', '/catalog/products')
 
