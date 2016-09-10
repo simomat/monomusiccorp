@@ -62,7 +62,11 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
             http
                     .csrf().disable()
                     .authorizeRequests()
-                    .antMatchers("/**").authenticated().and()
+                    .antMatchers("/").authenticated()
+                    .antMatchers("/info/**").authenticated()
+                    .antMatchers("/shopping/**").hasRole(UserRole.CUSTOMER)
+                    .antMatchers("/app/**").hasRole(UserRole.ADMIN)
+                    .antMatchers("/stock/newstockitem").hasRole(UserRole.STOCK_MANAGER).and()
                     .httpBasic().realmName(realmName).and()
                     .logout()
                         .addLogoutHandler((request, response, authentication) -> {
@@ -81,8 +85,8 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
         @Autowired
         public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
             userDetailsManager = auth.inMemoryAuthentication()
-                    .withUser("admin").password("admin").roles("ADMIN", "USER").and()
-                    .withUser("hans").password("hans").roles(UserRole.CUSTOMER.toString()).and()
+                    .withUser("admin").password("admin").roles(UserRole.ADMIN).and()
+                    .withUser("hans").password("hans").roles(UserRole.CUSTOMER).and()
                     .getUserDetailsService();
         }
 

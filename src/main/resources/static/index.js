@@ -57,7 +57,6 @@ $(document).ready(function(){
     })
 
 
-    bindGet('#test', '/app/')
     bindGet('#createdb', '/app/createdb')
     bindSend('#createcustomer', '/app/addCustomer', post)
 
@@ -72,7 +71,7 @@ $(document).ready(function(){
     bindSend('#newstockitem', '/stock/newstockitem', post)
 
     $.ajax({
-        url: 'app/currentuser'
+        url: 'info/currentuser'
     }).then(function(userName){
         $('#greeting').text('Hello ' + userName + '!')
     })
