@@ -62,24 +62,21 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
             http
                     .csrf().disable()
                     .authorizeRequests()
-                    .antMatchers("/").authenticated()
-                    .antMatchers("/info/**").authenticated()
-                    .antMatchers("/shopping/**").hasRole(UserRole.CUSTOMER)
-                    .antMatchers("/app/**").hasRole(UserRole.ADMIN)
-                    .antMatchers("/stock/newstockitem").hasRole(UserRole.STOCK_MANAGER).and()
-                    .httpBasic().realmName(realmName).and()
+                        .antMatchers("/").authenticated()
+                        .antMatchers("/info/**").authenticated()
+                        .antMatchers("/shopping/**").hasRole(UserRole.CUSTOMER)
+                        .antMatchers("/app/**").hasRole(UserRole.ADMIN)
+                        .antMatchers("/stock/newstockitem").hasRole(UserRole.STOCK_MANAGER).and()
+                        .httpBasic().realmName(realmName).and()
                     .logout()
-                        .addLogoutHandler((request, response, authentication) -> {
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            // workaround for http basic auth that lets you change user
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setHeader("WWW-Authenticate", "Basic realm=\"" + realmName + "\"");
-                        })
-                        .logoutSuccessHandler((request, response, authentication) -> {
-                            response.setContentType("application/json;charset=UTF-8");
                             response.setHeader("Cache-Control", "no-cache");
+                            response.setContentType("application/json;charset=UTF-8");
                             response.getWriter().write("{\"redirect\": \"/\"}");
-                        })
-                        .invalidateHttpSession(true)
-                        .clearAuthentication(true);
+                        });
         }
 
         @Autowired
