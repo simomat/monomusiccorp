@@ -1,8 +1,10 @@
 package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
+import de.infonautika.monomusiccorp.app.security.AuthenticationFacade;
 import de.infonautika.monomusiccorp.app.util.ResultStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +20,9 @@ public class ApplicationController {
 
     @Autowired
     private BusinessProcess businessProcess;
+
+    @Autowired
+    private AuthenticationFacade authenticationFacade;
 
     @RequestMapping("/")
     public String index() {
@@ -37,6 +42,12 @@ public class ApplicationController {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         }
         return resultStatus;
+    }
+
+    @RequestMapping("/currentuser")
+    public String currentUser() {
+        User principal = (User) authenticationFacade.getAuthentication().getPrincipal();
+        return principal.getUsername();
     }
 
 }

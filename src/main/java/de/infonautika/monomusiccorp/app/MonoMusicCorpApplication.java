@@ -1,6 +1,7 @@
 package de.infonautika.monomusiccorp.app;
 
 
+import de.infonautika.monomusiccorp.app.security.UserRole;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -21,6 +22,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.transaction.jta.JtaTransactionManager;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 import java.util.Map;
 
@@ -56,13 +58,32 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            http.csrf().disable().authorizeRequests().antMatchers("/**").authenticated().and().httpBasic();
+            String realmName = "Realm";
+            http
+                    .csrf().disable()
+                    .authorizeRequests()
+                    .antMatchers("/**").authenticated().and()
+                    .httpBasic().realmName(realmName).and()
+                    .logout()
+                        .addLogoutHandler((request, response, authentication) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setHeader("WWW-Authenticate", "Basic realm=\"" + realmName + "\"");
+                        })
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setHeader("Cache-Control", "no-cache");
+                            response.getWriter().write("{\"redirect\": \"/\"}");
+                        })
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true);
         }
 
         @Autowired
         public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
-            userDetailsManager = auth.inMemoryAuthentication().withUser("admin").password("admin")
-                    .roles("ADMIN", "USER").and().getUserDetailsService();
+            userDetailsManager = auth.inMemoryAuthentication()
+                    .withUser("admin").password("admin").roles("ADMIN", "USER").and()
+                    .withUser("hans").password("hans").roles(UserRole.CUSTOMER.toString()).and()
+                    .getUserDetailsService();
         }
 
         @Bean
