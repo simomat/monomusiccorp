@@ -1,7 +1,6 @@
 package de.infonautika.monomusiccorp.app.serialize;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import de.infonautika.monomusiccorp.app.domain.ItemId;

@@ -1,6 +1,6 @@
 package de.infonautika.monomusiccorp.app.domain;
 
-import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -12,10 +12,14 @@ public class Customer {
     @GeneratedValue
     private String id;
 
-    @Basic
+    @Column(unique=true)
     private String username;
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getId() {
+        return id;
     }
 }

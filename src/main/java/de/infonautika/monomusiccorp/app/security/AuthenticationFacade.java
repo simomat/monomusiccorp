@@ -2,6 +2,10 @@ package de.infonautika.monomusiccorp.app.security;
 
 import org.springframework.security.core.Authentication;
 
+import java.util.Optional;
+
 public interface AuthenticationFacade {
-    Authentication getAuthentication();
+    Optional<Authentication> getAuthentication();
+
+    Optional<String> getCurrentUserName();
 }

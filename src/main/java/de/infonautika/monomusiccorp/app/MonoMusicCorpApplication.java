@@ -1,9 +1,11 @@
 package de.infonautika.monomusiccorp.app;
 
 
+import de.infonautika.monomusiccorp.app.security.DefaultUsers;
+import de.infonautika.monomusiccorp.app.security.ModifiableUserDetailsManager;
+import de.infonautika.monomusiccorp.app.security.ModifiableUserDetailsManagerImpl;
 import de.infonautika.monomusiccorp.app.security.UserRole;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaBaseConfiguration;
@@ -15,11 +17,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.orm.jpa.vendor.AbstractJpaVendorAdapter;
 import org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.transaction.jta.JtaTransactionManager;
 
 import javax.servlet.http.HttpServletResponse;
@@ -54,7 +54,7 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
     @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
     protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
 
-        private UserDetailsManager userDetailsManager;
+        private ModifiableUserDetailsManager userDetailsManager;
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
@@ -71,6 +71,7 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
                     .logout()
                         .logoutSuccessHandler((request, response, authentication) -> {
                             // workaround for http basic auth that lets you change user
+                            // (in combination with specific ajax request)
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setHeader("WWW-Authenticate", "Basic realm=\"" + realmName + "\"");
                             response.setHeader("Cache-Control", "no-cache");
@@ -79,16 +80,13 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
                         });
         }
 
-        @Autowired
-        public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
-            userDetailsManager = auth.inMemoryAuthentication()
-                    .withUser("admin").password("admin").roles(UserRole.ADMIN).and()
-                    .withUser("hans").password("hans").roles(UserRole.CUSTOMER).and()
-                    .getUserDetailsService();
-        }
 
         @Bean
-        public UserDetailsManager getUserDetailsManager() {
+        public ModifiableUserDetailsManager getUserDetailsManager() {
+            if (userDetailsManager == null) {
+                userDetailsManager = new ModifiableUserDetailsManagerImpl();
+                userDetailsManager.createUser(DefaultUsers.ADMIN);
+            }
             return userDetailsManager;
         }
 

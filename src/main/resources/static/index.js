@@ -65,6 +65,7 @@ $(document).ready(function(){
     bindGet('#getbasket', '/shopping/basket')
     bindSend('#putbasket', '/shopping/basket/put', put)
     bindSend('#removebasket', '/shopping/basket/remove', del)
+    bindGet('#submitorder', '/shopping/sendorder')
 
 
     bindGet('#getstock', '/stock/stock')

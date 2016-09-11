@@ -1,4 +1,10 @@
 
+allprojects {
+    repositories {
+        maven { url "https://jitpack.io" }
+    }
+}
+
 buildscript {
     ext {
         springBootVersion = '1.4.0.RELEASE'
@@ -44,7 +50,8 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-data-jpa'){
         exclude group: 'org.hibernate', module: 'hibernate-entitymanager'
     }
-    compile('de.infonautika.streamjoin:streamjoin:1.0-SNAPSHOT')
+
+    compile('com.github.simomat:streamjoin:5ec8cc4d6ef2dbcc92718dae2672826a04c4cb6f')
 
     testCompile('junit:junit:4.12')
     testCompile('org.hamcrest:hamcrest-core:1.3')

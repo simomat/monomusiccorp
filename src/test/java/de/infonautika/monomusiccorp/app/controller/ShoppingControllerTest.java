@@ -40,7 +40,8 @@ public class ShoppingControllerTest {
 
     @Test
     public void getBasket() throws Exception {
-        when(businessProcess.getBasketContent()).thenReturn(singletonList(Quantity.create(Product.create("A", "T"), 2L)));
+        String customerId = null;
+        when(businessProcess.getBasketContent(customerId)).thenReturn(singletonList(Quantity.create(Product.create("A", "T"), 2L)));
 
         mvc.perform(get("/shopping/basket"))
                 .andExpect(status().isOk())
@@ -55,7 +56,8 @@ public class ShoppingControllerTest {
                 .content("{\"item\": {\"itemId\":\"34\"}, \"quantity\": 5}"))
                 .andExpect(status().isOk());
 
-        verify(businessProcess).putToBasket(Quantity.create(new ItemId("34"), 5L));
+        String customerId = null;
+        verify(businessProcess).putToBasket(customerId, Quantity.create(new ItemId("34"), 5L));
     }
 
     @Test
@@ -65,7 +67,8 @@ public class ShoppingControllerTest {
                 .content("{\"item\": {\"itemId\":\"34\"}, \"quantity\": 1}"))
                 .andExpect(status().isOk());
 
-        verify(businessProcess).removeFromBasket(Quantity.create(new ItemId("34"), 1L));
+        String customerId = null;
+        verify(businessProcess).removeFromBasket(customerId, Quantity.create(new ItemId("34"), 1L));
 
     }
 }

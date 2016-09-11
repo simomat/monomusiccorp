@@ -1,16 +1,15 @@
 package de.infonautika.monomusiccorp.app.security;
 
-import de.infonautika.monomusiccorp.app.util.ResultStatus;
+import de.infonautika.monomusiccorp.app.controller.ResultStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 
 @Service
 public class SecurityServiceImpl implements SecurityService{
 
     @Autowired
-    private UserDetailsManager userDetailsManager;
+    private ModifiableUserDetailsManager userDetailsManager;
 
     @Override
     public ResultStatus addUser(UserDetails customer) {
@@ -19,5 +18,10 @@ public class SecurityServiceImpl implements SecurityService{
         }
         userDetailsManager.createUser(customer);
         return ResultStatus.OK;
+    }
+
+    @Override
+    public void deleteUsers() {
+        userDetailsManager.deleteUsers();
     }
 }

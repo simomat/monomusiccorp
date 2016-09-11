@@ -2,19 +2,19 @@ package de.infonautika.monomusiccorp.app.business;
 
 
 import de.infonautika.monomusiccorp.app.controller.CustomerInfo;
+import de.infonautika.monomusiccorp.app.controller.ResultStatus;
 import de.infonautika.monomusiccorp.app.domain.*;
 import de.infonautika.monomusiccorp.app.repository.CustomerRepository;
 import de.infonautika.monomusiccorp.app.repository.ProductRepository;
 import de.infonautika.monomusiccorp.app.repository.StockItemRepository;
 import de.infonautika.monomusiccorp.app.security.SecurityService;
-import de.infonautika.monomusiccorp.app.util.ResultStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.List;
 
-import static de.infonautika.monomusiccorp.app.util.ResultStatus.isOk;
+import static de.infonautika.monomusiccorp.app.controller.ResultStatus.isOk;
 import static de.infonautika.streamjoin.Join.join;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -33,8 +33,6 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     @Autowired
     private SecurityService securityService;
-
-
 
     ShoppingBasket shoppingBasket = new ShoppingBasket();
 
@@ -57,6 +55,8 @@ public class BusinessProcessImpl implements BusinessProcess {
 
         productRepo.save(asList(products));
         stockItemRepository.save(asList(stocks));
+
+        addCustomer(new CustomerInfo("hans", "hans"));
     }
 
     @Override
@@ -77,12 +77,12 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     @Override
-    public void putToBasket(Quantity<ItemId> quantity) {
+    public void putToBasket(String customerId, Quantity<ItemId> quantity) {
         shoppingBasket.put(quantity.getItem(), quantity.getQuantity());
     }
 
     @Override
-    public List<Quantity<Product>> getBasketContent() {
+    public List<Quantity<Product>> getBasketContent(String customerId) {
         List<Position> positions = shoppingBasket.getPositions();
         List<String> ids = positions.stream()
                 .map(p -> p.getItemId().getId())
@@ -98,7 +98,7 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     @Override
-    public void removeFromBasket(Quantity<ItemId> quantity) {
+    public void removeFromBasket(String customerId, Quantity<ItemId> quantity) {
         shoppingBasket.remove(quantity.getItem(), quantity.getQuantity());
     }
 
@@ -111,6 +111,11 @@ public class BusinessProcessImpl implements BusinessProcess {
 
         createCustomer(customer);
         return ResultStatus.OK;
+    }
+
+    @Override
+    public void submitOrder(String customerId) {
+
     }
 
     private void createCustomer(CustomerInfo customerInfo) {
