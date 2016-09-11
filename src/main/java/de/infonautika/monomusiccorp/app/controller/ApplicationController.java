@@ -2,6 +2,7 @@ package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.business.ApplicationState;
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
+import de.infonautika.monomusiccorp.app.business.CustomerInfo;
 import de.infonautika.monomusiccorp.app.security.AuthenticationFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;

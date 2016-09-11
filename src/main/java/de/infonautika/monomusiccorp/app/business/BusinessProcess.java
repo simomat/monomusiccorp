@@ -1,6 +1,5 @@
 package de.infonautika.monomusiccorp.app.business;
 
-import de.infonautika.monomusiccorp.app.controller.CustomerInfo;
 import de.infonautika.monomusiccorp.app.controller.ResultStatus;
 import de.infonautika.monomusiccorp.app.domain.ItemId;
 import de.infonautika.monomusiccorp.app.domain.Product;

@@ -1,4 +1,4 @@
-package de.infonautika.monomusiccorp.app.controller;
+package de.infonautika.monomusiccorp.app.business;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -1,4 +1,4 @@
-package de.infonautika.monomusiccorp.app.controller;
+package de.infonautika.monomusiccorp.app.intermediate;
 
 import de.infonautika.monomusiccorp.app.domain.Customer;
 import de.infonautika.monomusiccorp.app.repository.CustomerRepository;

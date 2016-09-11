@@ -4,6 +4,7 @@ import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.Quantity;
 import de.infonautika.monomusiccorp.app.domain.ItemId;
 import de.infonautika.monomusiccorp.app.domain.Product;
+import de.infonautika.monomusiccorp.app.intermediate.CustomerProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

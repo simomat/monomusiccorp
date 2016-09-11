@@ -4,12 +4,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.HashSet;
 
 import static de.infonautika.monomusiccorp.app.security.UserRole.toAuthorities;
+import static java.util.Collections.unmodifiableCollection;
 
 public class MutableUserDetails implements UserDetails{
-    private static final String ROLE_PREFIX = "ROLE_";
     private final String username;
     private String password;
     private final Collection<? extends GrantedAuthority> authorities;
@@ -28,7 +27,7 @@ public class MutableUserDetails implements UserDetails{
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return new HashSet<>(authorities);
+        return unmodifiableCollection(authorities);
     }
 
     @Override
