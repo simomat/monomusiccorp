@@ -4,6 +4,7 @@ import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.Quantity;
 import de.infonautika.monomusiccorp.app.domain.ItemId;
 import de.infonautika.monomusiccorp.app.domain.Product;
+import de.infonautika.monomusiccorp.app.intermediate.CustomerProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,6 +14,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.util.Optional;
 
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.verify;
@@ -24,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(MockitoJUnitRunner.class)
 public class ShoppingControllerTest {
 
+    private final String CUSTOMER_ID = "123";
     private MockMvc mvc;
 
     @InjectMocks
@@ -32,16 +36,20 @@ public class ShoppingControllerTest {
     @Mock
     public BusinessProcess businessProcess;
 
+    @Mock
+    public CustomerProvider buCustomerProvider;
+
     @Before
     public void setUp() {
         mvc = MockMvcBuilders.standaloneSetup(shoppingController)
                 .build();
+
+        when(buCustomerProvider.getCustomerId()).thenReturn(Optional.of(CUSTOMER_ID));
     }
 
     @Test
     public void getBasket() throws Exception {
-        String customerId = null;
-        when(businessProcess.getBasketContent(customerId)).thenReturn(singletonList(Quantity.create(Product.create("A", "T"), 2L)));
+        when(businessProcess.getBasketContent(CUSTOMER_ID)).thenReturn(singletonList(Quantity.create(Product.create("A", "T"), 2L)));
 
         mvc.perform(get("/shopping/basket"))
                 .andExpect(status().isOk())
@@ -56,8 +64,7 @@ public class ShoppingControllerTest {
                 .content("{\"item\": {\"itemId\":\"34\"}, \"quantity\": 5}"))
                 .andExpect(status().isOk());
 
-        String customerId = null;
-        verify(businessProcess).putToBasket(customerId, Quantity.create(new ItemId("34"), 5L));
+        verify(businessProcess).putToBasket(CUSTOMER_ID, Quantity.create(new ItemId("34"), 5L));
     }
 
     @Test
@@ -67,8 +74,7 @@ public class ShoppingControllerTest {
                 .content("{\"item\": {\"itemId\":\"34\"}, \"quantity\": 1}"))
                 .andExpect(status().isOk());
 
-        String customerId = null;
-        verify(businessProcess).removeFromBasket(customerId, Quantity.create(new ItemId("34"), 1L));
+        verify(businessProcess).removeFromBasket(CUSTOMER_ID, Quantity.create(new ItemId("34"), 1L));
 
     }
 }
