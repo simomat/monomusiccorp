@@ -1,9 +1,6 @@
 package de.infonautika.monomusiccorp.app.domain;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
 public class Customer {
@@ -15,6 +12,10 @@ public class Customer {
     @Column(unique=true)
     private String username;
 
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
+    private ShoppingBasket shoppingBasket = new ShoppingBasket();
+
     public void setUsername(String username) {
         this.username = username;
     }
@@ -22,4 +23,9 @@ public class Customer {
     public String getId() {
         return id;
     }
+
+    public ShoppingBasket getShoppingBasket() {
+        return shoppingBasket;
+    }
+
 }

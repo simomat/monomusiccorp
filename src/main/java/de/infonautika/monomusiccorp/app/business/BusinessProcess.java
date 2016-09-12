@@ -9,8 +9,6 @@ import java.util.Collection;
 import java.util.List;
 
 public interface BusinessProcess {
-    void createDatabase();
-
     Collection<Product> getAllProducts();
 
     void addItemToStock(Quantity<ItemId> quantity);

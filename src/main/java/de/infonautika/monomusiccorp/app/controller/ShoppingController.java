@@ -49,7 +49,7 @@ public class ShoppingController {
                 businessProcess.removeFromBasket(id, quantity));
     }
 
-    @RequestMapping("/sendorder")
+    @RequestMapping("/submitorder")
     public ResultStatus submitOrder() {
         return withCustomerId((id) -> businessProcess.submitOrder(id));
     }

@@ -18,6 +18,6 @@ public class AuthenticationFacadeImpl implements AuthenticationFacade {
     public Optional<String> getCurrentUserName() {
         return getAuthentication()
                 .map((auth) -> (UserDetails) auth.getPrincipal())
-                .map((user) -> user.getUsername());
+                .map(UserDetails::getUsername);
     }
 }

@@ -1,13 +1,23 @@
 package de.infonautika.monomusiccorp.app.domain;
 
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 
+@Entity
 public class ShoppingBasket {
 
+    @Id
+    @GeneratedValue
+    private String id;
+
+    @ElementCollection
     private List<Position> positions = new ArrayList<>();
 
     public void put(ItemId itemId, Long quantity) {

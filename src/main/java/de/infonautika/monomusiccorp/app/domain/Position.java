@@ -1,11 +1,24 @@
 package de.infonautika.monomusiccorp.app.domain;
 
+import de.infonautika.monomusiccorp.app.persist.ItemIdConverter;
+
+import javax.persistence.Basic;
+import javax.persistence.Convert;
+import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
+@Embeddable
 public class Position {
-    final private ItemId itemId;
-    final private Long quantity;
+
+    @Basic
+    @Convert(converter = ItemIdConverter.class)
+    private ItemId itemId;
+    @Basic
+    private Long quantity;
+
+    public Position() {
+    }
 
     public Position(@NotNull ItemId itemId, @NotNull Long amount) {
         this.itemId = itemId;

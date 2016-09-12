@@ -5,6 +5,7 @@ import de.infonautika.monomusiccorp.app.controller.ResultStatus;
 import de.infonautika.monomusiccorp.app.domain.*;
 import de.infonautika.monomusiccorp.app.repository.CustomerRepository;
 import de.infonautika.monomusiccorp.app.repository.ProductRepository;
+import de.infonautika.monomusiccorp.app.repository.ShoppingBasketRepository;
 import de.infonautika.monomusiccorp.app.repository.StockItemRepository;
 import de.infonautika.monomusiccorp.app.security.SecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +13,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import static de.infonautika.monomusiccorp.app.controller.ResultStatus.isOk;
 import static de.infonautika.streamjoin.Join.join;
-import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 @Service
@@ -31,32 +33,10 @@ public class BusinessProcessImpl implements BusinessProcess {
     private CustomerRepository cusomerRepository;
 
     @Autowired
+    private ShoppingBasketRepository shoppingBasketRepository;
+
+    @Autowired
     private SecurityService securityService;
-
-    ShoppingBasket shoppingBasket = new ShoppingBasket();
-
-    @Override
-    public void createDatabase() {
-
-        Product[] products = {
-                Product.create("AC/DC", "Back in Black"),
-                Product.create("The Byrds", "Fifth Dimension "),
-                Product.create("AC/DC", "Let There Be Rock "),
-                Product.create("Jefferson Airplane", "Surrealistic Pillow"),
-                Product.create("The Easybeats", "Good Friday/Friday On My Mind")
-        };
-
-        StockItem[] stocks = {
-                StockItem.create(products[0], 20L),
-                StockItem.create(products[1], 15L),
-                StockItem.create(products[2], 3L)
-        };
-
-        productRepo.save(asList(products));
-        stockItemRepository.save(asList(stocks));
-
-        addCustomer(new CustomerInfo("hans", "hans"));
-    }
 
     @Override
     public Collection<Product> getAllProducts() {
@@ -77,28 +57,45 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     @Override
     public void putToBasket(String customerId, Quantity<ItemId> quantity) {
-        shoppingBasket.put(quantity.getItem(), quantity.getQuantity());
+        getShoppingBasketOfCustomer(customerId)
+                .ifPresent(shoppingBasket -> {
+                    shoppingBasket.put(quantity.getItem(), quantity.getQuantity());
+                    shoppingBasketRepository.save(shoppingBasket);
+                });
     }
 
     @Override
     public List<Quantity<Product>> getBasketContent(String customerId) {
-        List<Position> positions = shoppingBasket.getPositions();
-        List<String> ids = positions.stream()
-                .map(p -> p.getItemId().getId())
-                .collect(toList());
-        List<Product> products = productRepo.findByIdIn(ids);
+        return getShoppingBasketOfCustomer(customerId)
+                .map(ShoppingBasket::getPositions)
+                .map(positions ->
+                        join(positions.stream())
+                        .withKey(Position::getItemId)
+                        .on(productRepo.findByIdIn(positions.stream()
+                                .map(p -> p.getItemId().getId())
+                                .collect(toList())).stream())
+                        .withKey(Product::getItemId)
+                        .combine((pos, prod) -> Quantity.create(prod, pos.getQuantity()))
+                        .collect(toList()))
+                .orElse(emptyList());
+    }
 
-        return join(positions.stream())
-                .withKey(Position::getItemId)
-                .on(products.stream())
-                .withKey(Product::getItemId)
-                .combine((pos, prod) -> Quantity.create(prod, pos.getQuantity()))
-                .collect(toList());
+    private Optional<ShoppingBasket> getShoppingBasketOfCustomer(String customerId) {
+        return getCustomer(customerId)
+                .map(Customer::getShoppingBasket);
+    }
+
+    private Optional<Customer> getCustomer(String customerId) {
+        return Optional.of(cusomerRepository.findById(customerId));
     }
 
     @Override
     public void removeFromBasket(String customerId, Quantity<ItemId> quantity) {
-        shoppingBasket.remove(quantity.getItem(), quantity.getQuantity());
+        getShoppingBasketOfCustomer(customerId)
+                .ifPresent(shoppingBasket -> {
+                    shoppingBasket.remove(quantity.getItem(), quantity.getQuantity());
+                    shoppingBasketRepository.save(shoppingBasket);
+                });
     }
 
     @Override
