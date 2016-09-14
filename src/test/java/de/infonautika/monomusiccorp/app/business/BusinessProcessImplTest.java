@@ -119,7 +119,7 @@ public class BusinessProcessImplTest {
         ItemId itemId = ItemId.of("10");
         Product product = productWith(itemId);
 
-        when(productRepo.findOne(itemId)).thenReturn(product);
+        when(productRepo.findOne(itemId.getId())).thenReturn(product);
 
         businessProcess.addItemToStock(Quantity.of(itemId, 5L));
 
@@ -297,7 +297,7 @@ public class BusinessProcessImplTest {
         }
 
         public StateSetup productExistsReturnsTrue() {
-            when(productRepo.exists(any(ItemId.class))).thenReturn(true);
+            when(productRepo.exists(anyString())).thenReturn(true);
             return this;
         }
 

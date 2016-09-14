@@ -78,7 +78,7 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     private Optional<Product> getProduct(ItemId itemId) {
-        return Optional.ofNullable(productRepo.findOne(itemId));
+        return Optional.ofNullable(productRepo.findOne(itemId.getId()));
    }
 
     @Override
@@ -102,7 +102,7 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     private boolean itemExists(ItemId item) {
-        return productRepo.exists(item);
+        return productRepo.exists(item.getId());
     }
 
     @Override
@@ -114,13 +114,15 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     private List<Quantity<Product>> toProductQuantities(List<Position> positions) {
-        return join(positions.stream())
-                .withKey(Position::getItemId)
-                .on(findProductsById(positions))
-                .withKey(Product::getItemId)
-                .combine((pos, prod) ->
-                        Quantity.of(prod, pos.getQuantity()))
-                .collect(toList());
+        try (Stream<Product> products = findProductsById(positions)) {
+            return join(positions.stream())
+                    .withKey(Position::getItemId)
+                    .on(products)
+                    .withKey(Product::getItemId)
+                    .combine((pos, prod) ->
+                            Quantity.of(prod, pos.getQuantity()))
+                    .collect(toList());
+        }
     }
 
     private Stream<Product> findProductsById(List<Position> positions) {

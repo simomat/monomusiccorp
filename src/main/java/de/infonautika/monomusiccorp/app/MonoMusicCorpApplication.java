@@ -66,7 +66,7 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
                         .antMatchers("/info/**").authenticated()
                         .antMatchers("/shopping/**").hasRole(UserRole.CUSTOMER)
                         .antMatchers("/app/**").hasRole(UserRole.ADMIN)
-                        .antMatchers("/stock/newstockitem").hasRole(UserRole.STOCK_MANAGER).and()
+                        .antMatchers("/stock/**").hasRole(UserRole.STOCK_MANAGER).and()
                         .httpBasic().realmName(realmName).and()
                     .logout()
                         .logoutSuccessHandler((request, response, authentication) -> {
