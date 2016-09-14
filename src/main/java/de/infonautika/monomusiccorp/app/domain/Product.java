@@ -7,6 +7,7 @@ import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import java.util.Objects;
 
 @Entity
 public class Product {
@@ -31,6 +32,10 @@ public class Product {
         return new ItemId(id);
     }
 
+    public void setItemId(ItemId itemId) {
+        id = itemId.getId();
+    }
+
     public String getArtist() {
         return artist;
     }
@@ -45,5 +50,25 @@ public class Product {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Product product = (Product) o;
+        return Objects.equals(id, product.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return "Product{" +
+                "id='" + id + '\'' +
+                '}';
     }
 }

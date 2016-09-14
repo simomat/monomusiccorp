@@ -49,11 +49,13 @@ public class ShoppingControllerTest {
 
     @Test
     public void getBasket() throws Exception {
-        when(businessProcess.getBasketContent(CUSTOMER_ID)).thenReturn(singletonList(Quantity.create(Product.create("A", "T"), 2L)));
+        Product product = Product.create("A", "T");
+        product.setItemId(ItemId.of("5"));
+        when(businessProcess.getBasketContent(CUSTOMER_ID)).thenReturn(singletonList(Quantity.of(product, 2L)));
 
         mvc.perform(get("/shopping/basket"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("[{\"item\":{\"title\":\"T\", \"artist\":\"A\"}, \"quantity\": 2}]"));
+                .andExpect(content().json("[{\"item\":{\"title\":\"T\", \"artist\":\"A\", \"itemId\":\"5\"}, \"quantity\": 2}]"));
     }
 
     @Test
@@ -64,7 +66,7 @@ public class ShoppingControllerTest {
                 .content("{\"item\": {\"itemId\":\"34\"}, \"quantity\": 5}"))
                 .andExpect(status().isOk());
 
-        verify(businessProcess).putToBasket(CUSTOMER_ID, Quantity.create(new ItemId("34"), 5L));
+        verify(businessProcess).putToBasket(CUSTOMER_ID, Quantity.of(new ItemId("34"), 5L));
     }
 
     @Test
@@ -74,7 +76,7 @@ public class ShoppingControllerTest {
                 .content("{\"item\": {\"itemId\":\"34\"}, \"quantity\": 1}"))
                 .andExpect(status().isOk());
 
-        verify(businessProcess).removeFromBasket(CUSTOMER_ID, Quantity.create(new ItemId("34"), 1L));
+        verify(businessProcess).removeFromBasket(CUSTOMER_ID, Quantity.of(new ItemId("34"), 1L));
 
     }
 }

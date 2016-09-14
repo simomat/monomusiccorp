@@ -3,6 +3,7 @@ package de.infonautika.monomusiccorp.app.controller;
 import de.infonautika.monomusiccorp.app.business.ApplicationState;
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.CustomerInfo;
+import de.infonautika.monomusiccorp.app.business.ResultStatus;
 import de.infonautika.monomusiccorp.app.security.AuthenticationFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
 
-import static de.infonautika.monomusiccorp.app.controller.ResultStatus.isOk;
+import static de.infonautika.monomusiccorp.app.business.ResultStatus.isOk;
 
 @RestController
 @RequestMapping("/app")

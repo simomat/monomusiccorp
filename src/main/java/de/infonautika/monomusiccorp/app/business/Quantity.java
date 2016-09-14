@@ -13,6 +13,7 @@ public class Quantity<T> {
     public Quantity(
             @JsonProperty(value = "item", required = true) T item,
             @JsonProperty(value = "quantity", required = true) Long quantity) {
+        Objects.requireNonNull(item);
         this.item = item;
         this.quantity = quantity;
     }
@@ -25,7 +26,7 @@ public class Quantity<T> {
         return quantity;
     }
 
-    public static <T> Quantity<T> create(T item, Long quantity) {
+    public static <T> Quantity<T> of(T item, Long quantity) {
         return new Quantity<>(item, quantity);
     }
 

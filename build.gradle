@@ -51,7 +51,7 @@ dependencies {
         exclude group: 'org.hibernate', module: 'hibernate-entitymanager'
     }
 
-    compile('com.github.simomat:streamjoin:5ec8cc4d6ef2dbcc92718dae2672826a04c4cb6f')
+    compile('com.github.simomat:streamjoin:2ae856f8dc3012fce424c78a7ed0c48f57c21d81')
 
     testCompile('junit:junit:4.12')
     testCompile('org.hamcrest:hamcrest-core:1.3')

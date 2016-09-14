@@ -1,7 +1,7 @@
 package de.infonautika.monomusiccorp.app.intermediate;
 
 import de.infonautika.monomusiccorp.app.domain.Customer;
-import de.infonautika.monomusiccorp.app.repository.CustomerRepository;
+import de.infonautika.monomusiccorp.app.repository.CustomerLookup;
 import de.infonautika.monomusiccorp.app.security.AuthenticationFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,19 +15,13 @@ public class CustomerProviderImpl implements CustomerProvider {
     private AuthenticationFacade authenticationFacade;
 
     @Autowired
-    private CustomerRepository customerRepository;
+    private CustomerLookup customerLookup;
 
     @Override
     public Optional<String> getCustomerId() {
         return authenticationFacade.getCurrentUserName()
-                .flatMap(this::toCustomerId);
+                .flatMap((userName) -> customerLookup.getCustomerByName(userName)
+                        .map(Customer::getId));
     }
 
-    private Optional<String> toCustomerId(String userName) {
-        Customer customer = customerRepository.findByUsername(userName);
-        if (customer == null) {
-            return Optional.empty();
-        }
-        return Optional.of(customer.getId());
-    }
 }

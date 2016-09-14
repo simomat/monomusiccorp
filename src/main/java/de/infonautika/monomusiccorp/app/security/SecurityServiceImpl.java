@@ -1,6 +1,6 @@
 package de.infonautika.monomusiccorp.app.security;
 
-import de.infonautika.monomusiccorp.app.controller.ResultStatus;
+import de.infonautika.monomusiccorp.app.business.ResultStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;

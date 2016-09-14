@@ -11,6 +11,7 @@ public class ItemId implements Serializable {
     private String id;
 
     public ItemId(String id) {
+        Objects.requireNonNull(id);
         this.id = id;
     }
 
@@ -34,5 +35,9 @@ public class ItemId implements Serializable {
 
     public String getId() {
         return id;
+    }
+
+    public static ItemId of(String id) {
+        return new ItemId(id);
     }
 }

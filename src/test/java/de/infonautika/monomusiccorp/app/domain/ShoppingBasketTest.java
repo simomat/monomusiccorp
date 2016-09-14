@@ -106,5 +106,4 @@ public class ShoppingBasketTest {
         assertThat(shoppingBasket.getPositions(), containsInAnyOrder(new Position(itemIdOne, 1L), new Position(itemIdTwo, 1L)));
     }
 
-
 }

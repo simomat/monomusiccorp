@@ -13,7 +13,7 @@ public class StockItem {
     @Basic
     private Long quantity;
 
-    public static StockItem create(Product product, Long quantity) {
+    public static StockItem of(Product product, Long quantity) {
         StockItem stockItem = new StockItem();
         stockItem.setProduct(product);
         stockItem.setQuantity(quantity);
@@ -34,5 +34,9 @@ public class StockItem {
 
     public void setQuantity(Long quantity) {
         this.quantity = quantity;
+    }
+
+    public void addQuantity(Long quantity) {
+        this.quantity += quantity;
     }
 }

@@ -2,6 +2,7 @@ package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.Quantity;
+import de.infonautika.monomusiccorp.app.business.ResultStatus;
 import de.infonautika.monomusiccorp.app.domain.ItemId;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.intermediate.CustomerProvider;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -30,7 +30,7 @@ public class ShoppingController {
         return withCustomerId((id) ->
                 businessProcess.putToBasket(
                     id,
-                    Quantity.create(quantity.getItem(), quantity.getQuantity())));
+                    Quantity.of(quantity.getItem(), quantity.getQuantity())));
     }
 
     @RequestMapping("/basket")
@@ -45,21 +45,24 @@ public class ShoppingController {
     @RequestMapping("/basket/remove")
     @DeleteMapping
     public ResultStatus removeFromBasket(@RequestBody Quantity<ItemId> quantity) {
-        return withCustomerId((id) ->
-                businessProcess.removeFromBasket(id, quantity));
+        return withCustomerId((id) -> {
+            businessProcess.removeFromBasket(id, quantity);
+            return ResultStatus.OK;
+        });
     }
 
     @RequestMapping("/submitorder")
     public ResultStatus submitOrder() {
-        return withCustomerId((id) -> businessProcess.submitOrder(id));
+        return withCustomerId((id) -> {
+            businessProcess.submitOrder(id);
+            return ResultStatus.OK;
+        });
     }
 
 
-    private ResultStatus withCustomerId(Consumer<String> consumer) {
+    private ResultStatus withCustomerId(Function<String, ResultStatus> consumer) {
         return customerProvider.getCustomerId()
-                .map((id) -> {
-                    consumer.accept(id);
-                    return ResultStatus.OK;})
+                .map(consumer)
                 .orElse(ResultStatus.NO_CUSTOMER);
     }
 

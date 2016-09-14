@@ -16,6 +16,9 @@ public class Customer {
     @PrimaryKeyJoinColumn
     private ShoppingBasket shoppingBasket = new ShoppingBasket();
 
+    @Embedded
+    private Address address;
+
     public void setUsername(String username) {
         this.username = username;
     }
@@ -28,4 +31,19 @@ public class Customer {
         return shoppingBasket;
     }
 
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 }

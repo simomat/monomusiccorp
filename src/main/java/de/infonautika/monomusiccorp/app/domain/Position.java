@@ -58,4 +58,8 @@ public class Position {
                 ", quantity=" + quantity +
                 '}';
     }
+
+    public static Position of(ItemId itemId, long quantity) {
+        return new Position(itemId, quantity);
+    }
 }

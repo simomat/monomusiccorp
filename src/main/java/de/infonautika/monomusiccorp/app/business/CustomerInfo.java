@@ -12,13 +12,16 @@ public class CustomerInfo implements UserDetails {
 
     private String userName;
     private String password;
+    private String address;
 
     @JsonCreator
     public CustomerInfo(
             @JsonProperty(value = "userName", required = true) String userName,
-            @JsonProperty(value = "password", required = true) String password) {
+            @JsonProperty(value = "password", required = true) String password,
+            @JsonProperty(value = "address", required = true) String address) {
         this.userName = userName;
         this.password = password;
+        this.address = address;
     }
 
     @Override
@@ -54,5 +57,9 @@ public class CustomerInfo implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public String getAddress() {
+        return address;
     }
 }

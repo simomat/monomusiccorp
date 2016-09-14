@@ -49,16 +49,16 @@ public class ApplicationState {
         };
 
         StockItem[] stocks = {
-                StockItem.create(products[0], 20L),
-                StockItem.create(products[1], 15L),
-                StockItem.create(products[2], 3L)
+                StockItem.of(products[0], 20L),
+                StockItem.of(products[1], 15L),
+                StockItem.of(products[2], 3L)
         };
 
         productRepo.save(asList(products));
         stockItemRepository.save(asList(stocks));
 
 
-        businessProcess.addCustomer(new CustomerInfo("hans", "hans"));
+        businessProcess.addCustomer(new CustomerInfo("hans", "hans", "Hechtstr. 21, 01097 Dresden"));
 
     }
 }
