@@ -19,7 +19,7 @@ Tech stack
 * Apache Derby as database
 * UI: no UI, consider the REST API as top level for now. To simplify testing of REST APIs and not using cUrl all the way, there is a very simple web interface which calls the services.
 
-Things to considers
+Things to consider
 ------------------
 
 Yes, [BusinessProcessImpl.java](https://github.com/simomat/monomusiccorp/blob/master/src/main/java/de/infonautika/monomusiccorp/app/business/BusinessProcessImpl.java) is a *clumsy mess*. It's all up on you to slice the domain.
