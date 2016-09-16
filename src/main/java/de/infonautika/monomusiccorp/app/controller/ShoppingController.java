@@ -36,7 +36,7 @@ public class ShoppingController {
     @RequestMapping("/basket")
     @GetMapping
     public List<Quantity<Product>> getBasket() {
-        return withCustomerId(
+        return withCustomerIdOrElse(
                 (id) -> businessProcess.getBasketContent(id),
                 Collections::emptyList);
     }
@@ -61,12 +61,12 @@ public class ShoppingController {
 
 
     private ResultStatus withCustomerId(Function<String, ResultStatus> consumer) {
-        return customerProvider.getCustomerId()
-                .map(consumer)
-                .orElse(ResultStatus.NO_CUSTOMER);
+        return withCustomerIdOrElse(
+                consumer,
+                () -> ResultStatus.NO_CUSTOMER);
     }
 
-    private <T> T withCustomerId(Function<String, T> function, Supplier<T> defaultResult) {
+    private <T> T withCustomerIdOrElse(Function<String, T> function, Supplier<T> defaultResult) {
         return customerProvider.getCustomerId()
                 .map(function)
                 .orElseGet(defaultResult);
