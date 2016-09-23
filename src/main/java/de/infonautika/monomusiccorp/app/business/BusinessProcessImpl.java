@@ -121,6 +121,7 @@ public class BusinessProcessImpl implements BusinessProcess {
                     .withKey(Product::getItemId)
                     .combine((pos, prod) ->
                             Quantity.of(prod, pos.getQuantity()))
+                    .asStream()
                     .collect(toList());
         }
     }
