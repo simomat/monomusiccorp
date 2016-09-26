@@ -7,10 +7,12 @@ import de.infonautika.monomusiccorp.app.security.SecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static de.infonautika.monomusiccorp.app.business.ResultStatus.isOk;
@@ -32,6 +34,9 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private PickingOrderRepository pickingOrderRepository;
 
     @Autowired
     private ShoppingBasketRepository shoppingBasketRepository;
@@ -127,10 +132,11 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     private Stream<Product> findProductsById(List<Position> positions) {
-        Stream<Product> productStream = productRepo.findByIdIn(
-                positions.stream()
+        List<String> ids = positions.stream()
                 .map(p -> p.getItemId().getId())
-                .collect(toList()));
+                .collect(toList());
+        Stream<Product> productStream = productRepo.findByIdIn(
+                ids);
         if (productStream == null) {
             return Stream.empty();
         }
@@ -158,20 +164,47 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     @Override
-    public void submitOrder(String customerId) {
-        customerLookup.getCustomer(customerId)
-                .ifPresent(customer -> {
-                    Order order = createOrder(customer, customer.getShoppingBasket());
-                    pickAndShip(order);
+    public ResultStatus submitOrder(String customerId) {
+        return withCustomer(
+                customerId,
+                customer -> {
+                    ShoppingBasket shoppingBasket = customer.getShoppingBasket();
+                    if (shoppingBasket.isEmpty()) {
+                        return ResultStatus.NOT_EXISTENT;
+                    }
+
+                    Order order = createOrder(customer, shoppingBasket);
+                    newPickingOrder(order);
                     sendInvoice(order);
+                    return ResultStatus.OK;
                 });
+    }
+
+    private ResultStatus withCustomer(String customerId, Function<Customer, ResultStatus> consumer) {
+        return customerLookup.getCustomer(customerId)
+                .map(consumer)
+                .orElse(ResultStatus.NO_CUSTOMER);
+    }
+
+    @Override
+    public List<Order> getOrders(String customerId) {
+        return orderRepository.findByCustomerId(customerId);
     }
 
     private void sendInvoice(Order order) {
 
     }
 
-    private void pickAndShip(Order order) {
+    private void newPickingOrder(Order order) {
+        PickingOrder pickingOrder = new PickingOrder();
+        pickingOrder.setPickedItems(emptyList());
+        pickingOrder.setStatus(PickingOrder.PickingStatus.OPEN);
+        order.setPickingOrder(pickingOrder);
+        pickingOrderRepository.save(pickingOrder);
+        notifyNewPickingOrder();
+    }
+
+    private void notifyNewPickingOrder() {
 
     }
 
@@ -180,6 +213,7 @@ public class BusinessProcessImpl implements BusinessProcess {
         order.setCustomer(customer);
         order.setPositions(shoppingBasket.getPositions());
         order.setShippingAddress(customer.getAddress());
+        order.setSubmitTime(LocalDateTime.now());
         orderRepository.save(order);
         return order;
     }

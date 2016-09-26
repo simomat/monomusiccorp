@@ -37,7 +37,7 @@ $(document).ready(function(){
                     contentType: "application/json",
                     data: $('#inout').val(),
                     error: ajaxError
-            }).then(function(){setText('ok')})
+            }).then(handleData)
         })
     }
 
@@ -66,6 +66,7 @@ $(document).ready(function(){
     bindSend('#putbasket', '/shopping/basket/put', put)
     bindSend('#removebasket', '/shopping/basket/remove', del)
     bindGet('#submitorder', '/shopping/submitorder')
+    bindGet('#orderstatus', '/shopping/orders')
 
 
     bindGet('#getstock', '/stock/stock')

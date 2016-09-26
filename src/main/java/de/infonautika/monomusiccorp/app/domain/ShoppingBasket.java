@@ -52,4 +52,8 @@ public class ShoppingBasket {
     public List<Position> getPositions() {
         return unmodifiableList(positions);
     }
+
+    public boolean isEmpty() {
+        return positions.isEmpty();
+    }
 }
