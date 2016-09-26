@@ -25,6 +25,7 @@ import static java.util.Arrays.stream;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -62,6 +63,9 @@ public class BusinessProcessImplTest {
 
     @Mock
     private PickingOrderRepository pickingOrderRepository;
+
+    @Mock
+    private StockNotification stockNotification;
 
     @Test
     public void addCustomerWithExistingNamefails() throws Exception {
@@ -276,6 +280,34 @@ public class BusinessProcessImplTest {
         verify(orderRepository).save(captor.capture());
         assertThat(captor.getValue(), containsPosition(position));
 
+    }
+
+    @Test
+    public void submitOrderCreatesPickingOrder() throws Exception {
+        Position position = Position.of(ItemId.of("5"), 4L);
+        stateSetup()
+                .havingShoppingBasket(position);
+
+        businessProcess.submitOrder("3");
+
+        ArgumentCaptor<PickingOrder> captor = ArgumentCaptor.forClass(PickingOrder.class);
+        verify(pickingOrderRepository).save(captor.capture());
+        assertThat(captor.getValue(), not(containsPosition(position)));
+        assertThat(captor.getValue().getStatus(), is(PickingOrder.PickingStatus.OPEN));
+    }
+
+    @Test
+    public void submitOrderNotifiesStock() throws Exception {
+        Position position = Position.of(ItemId.of("5"), 4L);
+        stateSetup()
+                .havingShoppingBasket(position);
+
+        businessProcess.submitOrder("3");
+
+        ArgumentCaptor<PickingOrder> captor = ArgumentCaptor.forClass(PickingOrder.class);
+        verify(stockNotification).newPickingOrder(captor.capture());
+        assertThat(captor.getValue(), not(containsPosition(position)));
+        assertThat(captor.getValue().getStatus(), is(PickingOrder.PickingStatus.OPEN));
     }
 
     private StateSetup stateSetup() {

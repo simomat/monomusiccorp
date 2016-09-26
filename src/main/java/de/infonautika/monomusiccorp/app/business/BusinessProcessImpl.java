@@ -45,6 +45,9 @@ public class BusinessProcessImpl implements BusinessProcess {
     @Autowired
     private ProductLookup productLookup;
 
+    @Autowired
+    private StockNotification stockNotification;
+
     @Override
     public Collection<Product> getAllProducts() {
         return productLookup.findAll();
@@ -165,7 +168,9 @@ public class BusinessProcessImpl implements BusinessProcess {
                     }
 
                     Order order = createOrder(customer, shoppingBasket);
-                    newPickingOrder(order);
+                    PickingOrder pickingOrder = createPickingOrder(order);
+                    notifyNewPickingOrder(pickingOrder);
+
                     sendInvoice(order);
                     return ResultStatus.OK;
                 });
@@ -195,17 +200,17 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     }
 
-    private void newPickingOrder(Order order) {
+    private PickingOrder createPickingOrder(Order order) {
         PickingOrder pickingOrder = new PickingOrder();
         pickingOrder.setPickedItems(emptyList());
         pickingOrder.setStatus(PickingOrder.PickingStatus.OPEN);
         order.setPickingOrder(pickingOrder);
         pickingOrderRepository.save(pickingOrder);
-        notifyNewPickingOrder();
+        return pickingOrder;
     }
 
-    private void notifyNewPickingOrder() {
-
+    private void notifyNewPickingOrder(PickingOrder pickingOrder) {
+        stockNotification.newPickingOrder(pickingOrder);
     }
 
     private Order createOrder(Customer customer, ShoppingBasket shoppingBasket) {

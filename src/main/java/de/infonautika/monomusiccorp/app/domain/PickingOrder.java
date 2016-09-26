@@ -4,7 +4,7 @@ import javax.persistence.*;
 import java.util.List;
 
 @Entity
-public class PickingOrder {
+public class PickingOrder implements HasPositions {
 
     @Id
     @GeneratedValue
@@ -31,6 +31,11 @@ public class PickingOrder {
 
     public PickingStatus getStatus() {
         return status;
+    }
+
+    @Override
+    public List<Position> getPositions() {
+        return pickedItems;
     }
 
     public enum PickingStatus {OPEN}
