@@ -8,12 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static de.infonautika.monomusiccorp.app.business.ResultStatus.isOk;
 import static de.infonautika.streamjoin.Join.join;
@@ -22,9 +18,6 @@ import static java.util.stream.Collectors.toList;
 
 @Service
 public class BusinessProcessImpl implements BusinessProcess {
-
-    @Autowired
-    private ProductRepository productRepo;
 
     @Autowired
     private StockItemRepository stockItemRepository;
@@ -47,9 +40,12 @@ public class BusinessProcessImpl implements BusinessProcess {
     @Autowired
     private CustomerLookup customerLookup;
 
+    @Autowired
+    private ProductLookup productLookup;
+
     @Override
     public Collection<Product> getAllProducts() {
-        return productRepo.findAll();
+        return productLookup.findAll();
     }
 
     @Override
@@ -83,7 +79,7 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     private Optional<Product> getProduct(ItemId itemId) {
-        return Optional.ofNullable(productRepo.findOne(itemId.getId()));
+        return productLookup.findOne(itemId.getId());
    }
 
     @Override
@@ -107,7 +103,7 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     private boolean itemExists(ItemId item) {
-        return productRepo.exists(item.getId());
+        return productLookup.exists(item.getId());
     }
 
     @Override
@@ -119,28 +115,19 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     private List<Quantity<Product>> toProductQuantities(List<Position> positions) {
-        try (Stream<Product> products = findProductsById(positions)) {
-            return join(positions.stream())
+        return productLookup.withProducts(
+                positions.stream()
+                        .map(p -> p.getItemId().getId()),
+                products ->
+                    join(positions.stream())
                     .withKey(Position::getItemId)
                     .on(products)
                     .withKey(Product::getItemId)
                     .combine((pos, prod) ->
                             Quantity.of(prod, pos.getQuantity()))
                     .asStream()
-                    .collect(toList());
-        }
-    }
-
-    private Stream<Product> findProductsById(List<Position> positions) {
-        List<String> ids = positions.stream()
-                .map(p -> p.getItemId().getId())
-                .collect(toList());
-        Stream<Product> productStream = productRepo.findByIdIn(
-                ids);
-        if (productStream == null) {
-            return Stream.empty();
-        }
-        return productStream;
+                    .collect(toList()),
+                Collections::emptyList);
     }
 
     @Override

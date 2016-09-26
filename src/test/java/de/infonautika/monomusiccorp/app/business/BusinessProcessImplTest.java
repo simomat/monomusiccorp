@@ -13,12 +13,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static de.infonautika.monomusiccorp.app.DescribingMatcherBuilder.matcherForExpected;
+import static de.infonautika.streamjoin.Join.join;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -26,7 +28,6 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyCollectionOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.mockito.internal.matchers.Equality.areEqual;
@@ -40,7 +41,7 @@ public class BusinessProcessImplTest {
     public BusinessProcessImpl businessProcess;
 
     @Mock
-    private ProductRepository productRepo;
+    private ProductLookup productLookup;
 
     @Mock
     private StockItemRepository stockItemRepository;
@@ -109,6 +110,9 @@ public class BusinessProcessImplTest {
 
     @Test
     public void addStockItemWithoutProductfails() throws Exception {
+        stateSetup()
+                .havingProducts();
+
         ResultStatus actual = businessProcess.addItemToStock(Quantity.of(new ItemId("10"), 5L));
 
         assertThat(actual, is(ResultStatus.NOT_EXISTENT));
@@ -119,7 +123,7 @@ public class BusinessProcessImplTest {
         ItemId itemId = ItemId.of("10");
         Product product = productWith(itemId);
 
-        when(productRepo.findOne(itemId.getId())).thenReturn(product);
+        when(productLookup.findOne(itemId.getId())).thenReturn(Optional.of(product));
 
         businessProcess.addItemToStock(Quantity.of(itemId, 5L));
 
@@ -279,13 +283,25 @@ public class BusinessProcessImplTest {
     private class StateSetup {
         @SuppressWarnings("unchecked")
         public StateSetup havingProducts(Product... products) {
-            when(productRepo.findAll()).thenReturn(asList(products));
+            when(productLookup.findAll()).thenReturn(asList(products));
 
             doAnswer(invocation -> {
-                Collection<String> ids = (Collection<String>) invocation.getArguments()[0];
+                String id = invocation.getArgumentAt(0, String.class);
                 return stream(products)
-                        .filter(p -> ids.contains(p.getItemId().getId()));
-            }).when(productRepo).findByIdIn(anyCollectionOf(String.class));
+                        .filter(p -> p.getItemId().getId().equals(id))
+                        .findFirst();
+            }).when(productLookup).findOne(anyString());
+
+            doAnswer(invocation -> {
+                Function<Stream<Product>, ?> streamFunction = (Function<Stream<Product>, ?>) invocation.getArgumentAt(1, Function.class);
+                return streamFunction.apply(
+                        join(stream(products))
+                        .withKey(p -> p.getItemId().getId())
+                        .on((Stream<String>) invocation.getArgumentAt(0, Stream.class))
+                        .withKey(Function.identity())
+                        .group((p, idStream) -> p)
+                        .asStream());
+            }).when(productLookup).withProducts(any(), any(), any());
 
             return this;
         }
@@ -297,7 +313,7 @@ public class BusinessProcessImplTest {
         }
 
         public StateSetup productExistsReturnsTrue() {
-            when(productRepo.exists(anyString())).thenReturn(true);
+            when(productLookup.exists(anyString())).thenReturn(true);
             return this;
         }
 

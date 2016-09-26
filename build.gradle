@@ -31,7 +31,7 @@ repositories {
 dependencies {
     compile('org.slf4j:slf4j-api:1.7.21')
     compile('org.apache.commons:commons-lang3:3.4')
-    compile('org.eclipse.persistence:org.eclipse.persistence.jpa:2.6.3')
+    compile('org.eclipse.persistence:org.eclipse.persistence.jpa:2.6.4')
 
     compile('org.springframework.data:spring-data-jpa')
     compile('org.springframework.boot:spring-boot-starter-web')
