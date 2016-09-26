@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static de.infonautika.monomusiccorp.app.business.ResultStatus.isOk;
 import static de.infonautika.streamjoin.Join.join;
@@ -93,13 +95,14 @@ public class BusinessProcessImpl implements BusinessProcess {
             return ResultStatus.NOT_EXISTENT;
         }
 
-        customerLookup.getShoppingBasketOfCustomer(customerId)
-                .ifPresent(shoppingBasket -> {
+        return withCustomer(
+                customerId,
+                customer -> {
+                    ShoppingBasket shoppingBasket = customer.getShoppingBasket();
                     shoppingBasket.put(quantity.getItem(), quantity.getQuantity());
                     shoppingBasketRepository.save(shoppingBasket);
+                    return ResultStatus.OK;
                 });
-
-        return ResultStatus.OK;
     }
 
     private boolean itemExists(ItemId item) {
@@ -108,10 +111,10 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     @Override
     public List<Quantity<Product>> getBasketContent(String customerId) {
-        return customerLookup.getShoppingBasketOfCustomer(customerId)
-                .map(ShoppingBasket::getPositions)
-                .map(this::toProductQuantities)
-                .orElse(emptyList());
+        return withCustomer(
+                customerId,
+                customer -> toProductQuantities(customer.getShoppingBasket().getPositions()),
+                Collections::emptyList);
     }
 
     private List<Quantity<Product>> toProductQuantities(List<Position> positions) {
@@ -132,8 +135,9 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     @Override
     public void removeFromBasket(String customerId, Quantity<ItemId> quantity) {
-        customerLookup.getShoppingBasketOfCustomer(customerId)
-                .ifPresent(shoppingBasket -> {
+        tryWithCustomer(customerId,
+                customer -> {
+                    ShoppingBasket shoppingBasket = customer.getShoppingBasket();
                     shoppingBasket.remove(quantity.getItem(), quantity.getQuantity());
                     shoppingBasketRepository.save(shoppingBasket);
                 });
@@ -167,10 +171,19 @@ public class BusinessProcessImpl implements BusinessProcess {
                 });
     }
 
-    private ResultStatus withCustomer(String customerId, Function<Customer, ResultStatus> consumer) {
+    private ResultStatus withCustomer(String customerId, Function<Customer, ResultStatus> customerMapper) {
+        return withCustomer(customerId, customerMapper, () -> ResultStatus.NO_CUSTOMER);
+    }
+
+    private <T> T withCustomer(String customerId, Function<Customer, T> customerMapper, Supplier<T> elseGet) {
         return customerLookup.getCustomer(customerId)
-                .map(consumer)
-                .orElse(ResultStatus.NO_CUSTOMER);
+                .map(customerMapper)
+                .orElse(elseGet.get());
+    }
+
+    private void tryWithCustomer(String customerId, Consumer<Customer> consumer) {
+        customerLookup.getCustomer(customerId)
+                .ifPresent(consumer);
     }
 
     @Override

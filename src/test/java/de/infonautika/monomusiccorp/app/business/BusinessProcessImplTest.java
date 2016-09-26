@@ -5,7 +5,6 @@ import de.infonautika.monomusiccorp.app.domain.*;
 import de.infonautika.monomusiccorp.app.repository.*;
 import de.infonautika.monomusiccorp.app.security.SecurityService;
 import org.hamcrest.Matcher;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -61,6 +60,9 @@ public class BusinessProcessImplTest {
     @Mock
     private CustomerLookup customerLookup;
 
+    @Mock
+    private PickingOrderRepository pickingOrderRepository;
+
     @Test
     public void addCustomerWithExistingNamefails() throws Exception {
         when(securityService.addUser(any())).thenReturn(ResultStatus.USER_EXISTS);
@@ -109,7 +111,7 @@ public class BusinessProcessImplTest {
     }
 
     @Test
-    public void addStockItemWithoutProductfails() throws Exception {
+    public void addStockItemWithoutProductFails() throws Exception {
         stateSetup()
                 .havingProducts();
 
@@ -192,11 +194,11 @@ public class BusinessProcessImplTest {
         assertThat(captor.getValue(), containsPosition(Position.of(ItemId.of("4"), 3L)));
     }
 
-    private Matcher<ShoppingBasket> containsPosition(Position position) {
+    private Matcher<HasPositions> containsPosition(Position position) {
         return BiDescribingMatcherBuilder
-                .<Position, ShoppingBasket>matcherForExpected(position)
+                .<Position, HasPositions>matcherForExpected(position)
                     .withMatcher((actual, expected) -> actual.getPositions().contains(expected))
-                    .withExpectedDescriber((expected) -> ShoppingBasket.class.getSimpleName() + " containing " + expected)
+                    .withExpectedDescriber((expected) -> expected.getClass().getSimpleName() + " containing " + expected)
                     .withActualDescriber((actual) -> actual.getClass().getSimpleName() + " containsPosition [" +
                             actual.getPositions().stream()
                                     .map(Object::toString)
@@ -206,7 +208,8 @@ public class BusinessProcessImplTest {
 
     @Test
     public void contentOfEmptyBasketIsEmpty() throws Exception {
-        when(customerLookup.getShoppingBasketOfCustomer(anyString())).thenReturn(Optional.of(new ShoppingBasket()));
+        stateSetup()
+                .emptyShoppingBasket();
 
         List<Quantity<Product>> basketContent = businessProcess.getBasketContent("");
 
@@ -249,18 +252,30 @@ public class BusinessProcessImplTest {
         assertThat(captor.getValue(), containsPosition(Position.of(ItemId.of("5"), 1L)));
     }
 
-    @Ignore
     @Test
-    public void submitOrder() throws Exception {
-        Customer customer = new Customer();
-        customer.setId("3");
+    public void submitOrderWithEmptyBasketFails() throws Exception {
         stateSetup()
-                .havingCustomers(customer);
+                .emptyShoppingBasket();
 
-        businessProcess.submitOrder("3");
+        ResultStatus status = businessProcess.submitOrder("3");
 
+        assertThat(status, is(ResultStatus.NOT_EXISTENT));
+    }
 
-        // T B C
+    @Test
+    public void submitOrderCreatesOrderWithPositions() throws Exception {
+        Position position = Position.of(ItemId.of("5"), 4L);
+        stateSetup()
+                .havingShoppingBasket(position);
+
+        ResultStatus status = businessProcess.submitOrder("3");
+
+        assertThat(status, is(ResultStatus.OK));
+
+        ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(captor.capture());
+        assertThat(captor.getValue(), containsPosition(position));
+
     }
 
     private StateSetup stateSetup() {
@@ -281,6 +296,8 @@ public class BusinessProcessImplTest {
     }
 
     private class StateSetup {
+        private Customer customer = new Customer();
+
         @SuppressWarnings("unchecked")
         public StateSetup havingProducts(Product... products) {
             when(productLookup.findAll()).thenReturn(asList(products));
@@ -307,8 +324,10 @@ public class BusinessProcessImplTest {
         }
 
         public StateSetup havingShoppingBasket(Position... positions) {
-            when(customerLookup.getShoppingBasketOfCustomer(anyString()))
-                    .thenReturn(Optional.ofNullable(shoppingBasketWith(asList(positions))));
+            Customer customer = getCustomer();
+            customer.setShoppingBasket(shoppingBasketWith(asList(positions)));
+            when(customerLookup.getCustomer(anyString()))
+                    .thenReturn(Optional.ofNullable(customer));
             return this;
         }
 
@@ -318,8 +337,10 @@ public class BusinessProcessImplTest {
         }
 
         public StateSetup emptyShoppingBasket() {
-            when(customerLookup.getShoppingBasketOfCustomer(anyString()))
-                    .thenReturn(Optional.of(new ShoppingBasket()));
+            Customer customer = getCustomer();
+            customer.setShoppingBasket(new ShoppingBasket());
+            when(customerLookup.getCustomer(anyString()))
+                    .thenReturn(Optional.of(customer));
             return this;
         }
 
@@ -335,14 +356,8 @@ public class BusinessProcessImplTest {
             return this;
         }
 
-        public StateSetup havingCustomers(Customer... customers) {
-            doAnswer(invocation -> {
-                String id = (String) invocation.getArguments()[0];
-                return stream(customers)
-                        .filter(customer -> customer.getId().equals(id))
-                        .findFirst();
-            }).when(customerLookup).getCustomer(anyString());
-            return this;
+        public Customer getCustomer() {
+            return customer;
         }
     }
 

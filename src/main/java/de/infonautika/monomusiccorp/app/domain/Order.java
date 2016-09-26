@@ -6,7 +6,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "xORDER")
-public class Order {
+public class Order implements HasPositions {
 
     @Id
     @GeneratedValue
@@ -49,6 +49,7 @@ public class Order {
         return submitTime;
     }
 
+    @Override
     public List<Position> getPositions() {
         return positions;
     }
