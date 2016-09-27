@@ -5,7 +5,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 public class DescribingMatcherBuilder<T> {
-    private T expected;
+    private final T expected;
     private BiPredicate<T, T> matcher;
     private Function<T, String> describer;
 

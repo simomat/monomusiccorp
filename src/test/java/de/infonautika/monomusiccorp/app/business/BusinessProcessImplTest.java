@@ -27,8 +27,6 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.mockito.internal.matchers.Equality.areEqual;
 
@@ -68,7 +66,7 @@ public class BusinessProcessImplTest {
     private StockNotification stockNotification;
 
     @Test
-    public void addCustomerWithExistingNamefails() throws Exception {
+    public void addCustomerWithExistingNameFails() throws Exception {
         when(securityService.addUser(any())).thenReturn(ResultStatus.USER_EXISTS);
 
         ResultStatus status = businessProcess.addCustomer(hans);
@@ -161,7 +159,7 @@ public class BusinessProcessImplTest {
     }
 
     @Test
-    public void putNonexistingItemToBasketFails() throws Exception {
+    public void putNonExistingItemToBasketFails() throws Exception {
         ResultStatus actual = businessProcess.putToBasket("", Quantity.of(ItemId.of("5"), 3L));
 
         assertThat(actual, is(ResultStatus.NOT_EXISTENT));
@@ -359,7 +357,7 @@ public class BusinessProcessImplTest {
             Customer customer = getCustomer();
             customer.setShoppingBasket(shoppingBasketWith(asList(positions)));
             when(customerLookup.getCustomer(anyString()))
-                    .thenReturn(Optional.ofNullable(customer));
+                    .thenReturn(Optional.of(customer));
             return this;
         }
 
