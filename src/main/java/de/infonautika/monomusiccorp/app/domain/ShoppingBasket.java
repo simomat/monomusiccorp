@@ -57,4 +57,8 @@ public class ShoppingBasket implements HasPositions {
     public boolean isEmpty() {
         return positions.isEmpty();
     }
+
+    public void clear() {
+        positions = new ArrayList<>();
+    }
 }

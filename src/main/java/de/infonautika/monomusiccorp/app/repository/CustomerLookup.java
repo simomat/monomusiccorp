@@ -8,4 +8,6 @@ public interface CustomerLookup {
     Optional<Customer> getCustomer(String customerId);
 
     Optional<Customer> getCustomerByName(String userName);
+
+    void save(Customer customer);
 }

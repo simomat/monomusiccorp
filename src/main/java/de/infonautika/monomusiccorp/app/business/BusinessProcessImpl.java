@@ -28,8 +28,6 @@ public class BusinessProcessImpl implements BusinessProcess {
     @Autowired
     private StockItemRepository stockItemRepository;
 
-    @Autowired
-    private CustomerRepository customerRepository;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -186,15 +184,16 @@ public class BusinessProcessImpl implements BusinessProcess {
                     PickingOrder pickingOrder = createPickingOrder(order);
                     notifyNewPickingOrder(pickingOrder);
 
-                    clearShoppingBasket(shoppingBasket);
+                    clearShoppingBasket(customer);
 
                     sendInvoice(order);
                     return ResultStatus.OK;
                 });
     }
 
-    private void clearShoppingBasket(ShoppingBasket shoppingBasket) {
-
+    private void clearShoppingBasket(Customer customer) {
+        customer.getShoppingBasket().clear();
+        customerLookup.save(customer);
     }
 
     private ResultStatus withCustomer(String customerId, Function<Customer, ResultStatus> customerMapper) {
@@ -253,7 +252,7 @@ public class BusinessProcessImpl implements BusinessProcess {
         Customer customer = new Customer();
         customer.setUsername(customerInfo.getUsername());
         customer.setAddress(new Address(customerInfo.getAddress()));
-        customerRepository.save(customer);
+        customerLookup.save(customer);
     }
 
 }
