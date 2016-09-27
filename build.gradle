@@ -1,9 +1,4 @@
 
-allprojects {
-    repositories {
-        maven { url "https://jitpack.io" }
-    }
-}
 
 buildscript {
     ext {
@@ -20,6 +15,7 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'spring-boot'
 apply plugin: 'idea'
+apply plugin: 'application'
 
 jar {
     baseName = 'monomusiccorp'
@@ -27,6 +23,7 @@ jar {
 }
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
+mainClassName = 'de.infonautika.monomusiccorp.app.MonoMusicCorpApplication'
 
 repositories {
     jcenter()
@@ -36,7 +33,7 @@ repositories {
 dependencies {
     compile('org.slf4j:slf4j-api:1.7.21')
     compile('org.apache.commons:commons-lang3:3.4')
-    compile('org.eclipse.persistence:org.eclipse.persistence.jpa:2.6.3')
+    compile('org.eclipse.persistence:org.eclipse.persistence.jpa:2.6.4')
 
     compile('org.springframework.data:spring-data-jpa')
     compile('org.springframework.boot:spring-boot-starter-web')

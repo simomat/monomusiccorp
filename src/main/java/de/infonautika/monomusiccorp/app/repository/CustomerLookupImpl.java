@@ -1,7 +1,6 @@
 package de.infonautika.monomusiccorp.app.repository;
 
 import de.infonautika.monomusiccorp.app.domain.Customer;
-import de.infonautika.monomusiccorp.app.domain.ShoppingBasket;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,12 +11,6 @@ public class CustomerLookupImpl implements CustomerLookup {
 
     @Autowired
     private CustomerRepository customerRepository;
-
-    @Override
-    public Optional<ShoppingBasket> getShoppingBasketOfCustomer(String customerId) {
-        return getCustomer(customerId)
-                .map(Customer::getShoppingBasket);
-    }
 
     @Override
     public Optional<Customer> getCustomer(String customerId) {

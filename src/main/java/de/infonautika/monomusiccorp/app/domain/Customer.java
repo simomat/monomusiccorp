@@ -46,4 +46,8 @@ public class Customer {
     public void setId(String id) {
         this.id = id;
     }
+
+    public void setShoppingBasket(ShoppingBasket shoppingBasket) {
+        this.shoppingBasket = shoppingBasket;
+    }
 }

@@ -1,6 +1,7 @@
 package de.infonautika.monomusiccorp.app.business;
 
 import de.infonautika.monomusiccorp.app.domain.ItemId;
+import de.infonautika.monomusiccorp.app.domain.Order;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.domain.StockItem;
 
@@ -22,5 +23,7 @@ public interface BusinessProcess {
 
     ResultStatus addCustomer(CustomerInfo customer);
 
-    void submitOrder(String customerId);
+    ResultStatus submitOrder(String customerId);
+
+    List<Order> getOrders(String id);
 }

@@ -11,7 +11,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 
 @Entity
-public class ShoppingBasket {
+public class ShoppingBasket implements HasPositions {
 
     @Id
     @GeneratedValue
@@ -49,7 +49,12 @@ public class ShoppingBasket {
         put(itemId, -quantity);
     }
 
+    @Override
     public List<Position> getPositions() {
         return unmodifiableList(positions);
+    }
+
+    public boolean isEmpty() {
+        return positions.isEmpty();
     }
 }

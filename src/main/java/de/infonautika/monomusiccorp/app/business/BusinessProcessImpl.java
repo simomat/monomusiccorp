@@ -4,14 +4,16 @@ package de.infonautika.monomusiccorp.app.business;
 import de.infonautika.monomusiccorp.app.domain.*;
 import de.infonautika.monomusiccorp.app.repository.*;
 import de.infonautika.monomusiccorp.app.security.SecurityService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static de.infonautika.monomusiccorp.app.business.ResultStatus.isOk;
 import static de.infonautika.streamjoin.Join.join;
@@ -21,8 +23,7 @@ import static java.util.stream.Collectors.toList;
 @Service
 public class BusinessProcessImpl implements BusinessProcess {
 
-    @Autowired
-    private ProductRepository productRepo;
+    final Logger logger = LoggerFactory.getLogger(BusinessProcessImpl.class);
 
     @Autowired
     private StockItemRepository stockItemRepository;
@@ -34,6 +35,9 @@ public class BusinessProcessImpl implements BusinessProcess {
     private OrderRepository orderRepository;
 
     @Autowired
+    private PickingOrderRepository pickingOrderRepository;
+
+    @Autowired
     private ShoppingBasketRepository shoppingBasketRepository;
 
     @Autowired
@@ -42,9 +46,15 @@ public class BusinessProcessImpl implements BusinessProcess {
     @Autowired
     private CustomerLookup customerLookup;
 
+    @Autowired
+    private ProductLookup productLookup;
+
+    @Autowired
+    private StockNotification stockNotification;
+
     @Override
     public Collection<Product> getAllProducts() {
-        return productRepo.findAll();
+        return productLookup.findAll();
     }
 
     @Override
@@ -59,16 +69,21 @@ public class BusinessProcessImpl implements BusinessProcess {
                             createStockItem(product, quantity);
                             return ResultStatus.OK;
                         }).
-                        orElse(ResultStatus.NOT_EXISTENT));
+                        orElseGet(() -> {
+                            logger.debug("no product of {} found to add stock item", quantity.getItem());
+                            return ResultStatus.NOT_EXISTENT;
+                        }));
     }
 
     private void createStockItem(Product product, Quantity<ItemId> quantity) {
+        logger.debug("new stock item {} with quantity of {}", product.getItemId(), quantity.getQuantity());
         StockItem stockItem = StockItem.of(product, quantity.getQuantity());
         stockItemRepository.save(stockItem);
     }
 
     private void updateStockItemQuantity(StockItem stockItem, Quantity<ItemId> quantity) {
         assert Objects.equals(stockItem.getProduct().getItemId(), quantity.getItem());
+        logger.debug("update stock item {} quantity with {}", quantity.getItem(), stockItem.getQuantity());
         stockItem.addQuantity(quantity.getQuantity());
         stockItemRepository.save(stockItem);
     }
@@ -78,7 +93,7 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     private Optional<Product> getProduct(ItemId itemId) {
-        return Optional.ofNullable(productRepo.findOne(itemId.getId()));
+        return productLookup.findOne(itemId.getId());
    }
 
     @Override
@@ -89,60 +104,57 @@ public class BusinessProcessImpl implements BusinessProcess {
     @Override
     public ResultStatus putToBasket(String customerId, Quantity<ItemId> quantity) {
         if (!itemExists(quantity.getItem())) {
+            logger.debug("user id {} tried to put {} to basket, but product does not exist", customerId, quantity.getItem());
             return ResultStatus.NOT_EXISTENT;
         }
 
-        customerLookup.getShoppingBasketOfCustomer(customerId)
-                .ifPresent(shoppingBasket -> {
+        return withCustomer(
+                customerId,
+                customer -> {
+                    ShoppingBasket shoppingBasket = customer.getShoppingBasket();
                     shoppingBasket.put(quantity.getItem(), quantity.getQuantity());
                     shoppingBasketRepository.save(shoppingBasket);
+                    logger.debug("customer {} put {} to basket", customer.getUsername(), quantity);
+                    return ResultStatus.OK;
                 });
-
-        return ResultStatus.OK;
     }
 
     private boolean itemExists(ItemId item) {
-        return productRepo.exists(item.getId());
+        return productLookup.exists(item.getId());
     }
 
     @Override
     public List<Quantity<Product>> getBasketContent(String customerId) {
-        return customerLookup.getShoppingBasketOfCustomer(customerId)
-                .map(ShoppingBasket::getPositions)
-                .map(this::toProductQuantities)
-                .orElse(emptyList());
+        return withCustomer(
+                customerId,
+                customer -> toProductQuantities(customer.getShoppingBasket().getPositions()),
+                Collections::emptyList);
     }
 
     private List<Quantity<Product>> toProductQuantities(List<Position> positions) {
-        try (Stream<Product> products = findProductsById(positions)) {
-            return join(positions.stream())
+        return productLookup.withProducts(
+                positions.stream()
+                        .map(p -> p.getItemId().getId()),
+                products ->
+                    join(positions.stream())
                     .withKey(Position::getItemId)
                     .on(products)
                     .withKey(Product::getItemId)
                     .combine((pos, prod) ->
                             Quantity.of(prod, pos.getQuantity()))
                     .asStream()
-                    .collect(toList());
-        }
-    }
-
-    private Stream<Product> findProductsById(List<Position> positions) {
-        Stream<Product> productStream = productRepo.findByIdIn(
-                positions.stream()
-                .map(p -> p.getItemId().getId())
-                .collect(toList()));
-        if (productStream == null) {
-            return Stream.empty();
-        }
-        return productStream;
+                    .collect(toList()),
+                Collections::emptyList);
     }
 
     @Override
     public void removeFromBasket(String customerId, Quantity<ItemId> quantity) {
-        customerLookup.getShoppingBasketOfCustomer(customerId)
-                .ifPresent(shoppingBasket -> {
+        tryWithCustomer(customerId,
+                customer -> {
+                    ShoppingBasket shoppingBasket = customer.getShoppingBasket();
                     shoppingBasket.remove(quantity.getItem(), quantity.getQuantity());
                     shoppingBasketRepository.save(shoppingBasket);
+                    logger.debug("customer {} removed {} of {} from basket", customer.getUsername(), quantity.getQuantity(), quantity.getItem());
                 });
     }
 
@@ -150,29 +162,80 @@ public class BusinessProcessImpl implements BusinessProcess {
     public ResultStatus addCustomer(CustomerInfo customer) {
         ResultStatus resultStatus = securityService.addUser(customer);
         if (!isOk(resultStatus)) {
+            logger.info("failed to add customer {}", customer.getUsername());
             return resultStatus;
         }
 
         createCustomer(customer);
+        logger.info("customer {} added", customer.getUsername());
         return ResultStatus.OK;
     }
 
     @Override
-    public void submitOrder(String customerId) {
-        customerLookup.getCustomer(customerId)
-                .ifPresent(customer -> {
-                    Order order = createOrder(customer, customer.getShoppingBasket());
-                    pickAndShip(order);
+    public ResultStatus submitOrder(String customerId) {
+        return withCustomer(
+                customerId,
+                customer -> {
+                    ShoppingBasket shoppingBasket = customer.getShoppingBasket();
+                    if (shoppingBasket.isEmpty()) {
+                        logger.debug("rejected submit an order with empty basket for customer {}", customer.getUsername());
+                        return ResultStatus.NOT_EXISTENT;
+                    }
+
+                    Order order = createOrder(customer, shoppingBasket);
+                    PickingOrder pickingOrder = createPickingOrder(order);
+                    notifyNewPickingOrder(pickingOrder);
+
+                    clearShoppingBasket(shoppingBasket);
+
                     sendInvoice(order);
+                    return ResultStatus.OK;
                 });
+    }
+
+    private void clearShoppingBasket(ShoppingBasket shoppingBasket) {
+
+    }
+
+    private ResultStatus withCustomer(String customerId, Function<Customer, ResultStatus> customerMapper) {
+        return withCustomer(customerId, customerMapper, () -> ResultStatus.NO_CUSTOMER);
+    }
+
+    private <T> T withCustomer(String customerId, Function<Customer, T> customerMapper, Supplier<T> elseGet) {
+        return customerLookup.getCustomer(customerId)
+                .map(customerMapper)
+                .orElseGet(() -> {
+                    logger.debug("no customer with id {} found", customerId);
+                    return elseGet.get();
+                });
+    }
+
+    private void tryWithCustomer(String customerId, Consumer<Customer> consumer) {
+        customerLookup.getCustomer(customerId)
+                .ifPresent(consumer);
+    }
+
+    @Override
+    public List<Order> getOrders(String customerId) {
+        return orderRepository.findByCustomerId(customerId);
     }
 
     private void sendInvoice(Order order) {
 
     }
 
-    private void pickAndShip(Order order) {
+    private PickingOrder createPickingOrder(Order order) {
+        PickingOrder pickingOrder = new PickingOrder();
+        pickingOrder.setPickedItems(emptyList());
+        pickingOrder.setStatus(PickingOrder.PickingStatus.OPEN);
+        order.setPickingOrder(pickingOrder);
+        pickingOrderRepository.save(pickingOrder);
+        logger.debug("picking order {} for order {} created", pickingOrder.getId(), order.getId());
+        return pickingOrder;
+    }
 
+    private void notifyNewPickingOrder(PickingOrder pickingOrder) {
+        stockNotification.newPickingOrder(pickingOrder);
     }
 
     private Order createOrder(Customer customer, ShoppingBasket shoppingBasket) {
@@ -180,7 +243,9 @@ public class BusinessProcessImpl implements BusinessProcess {
         order.setCustomer(customer);
         order.setPositions(shoppingBasket.getPositions());
         order.setShippingAddress(customer.getAddress());
+        order.setSubmitTime(LocalDateTime.now());
         orderRepository.save(order);
+        logger.debug("order {} for customer {} created", order.getId(), customer.getUsername());
         return order;
     }
 

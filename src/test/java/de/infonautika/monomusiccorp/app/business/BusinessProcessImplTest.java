@@ -5,7 +5,6 @@ import de.infonautika.monomusiccorp.app.domain.*;
 import de.infonautika.monomusiccorp.app.repository.*;
 import de.infonautika.monomusiccorp.app.security.SecurityService;
 import org.hamcrest.Matcher;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -13,20 +12,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static de.infonautika.monomusiccorp.app.DescribingMatcherBuilder.matcherForExpected;
+import static de.infonautika.streamjoin.Join.join;
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyCollectionOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.mockito.internal.matchers.Equality.areEqual;
@@ -40,7 +41,7 @@ public class BusinessProcessImplTest {
     public BusinessProcessImpl businessProcess;
 
     @Mock
-    private ProductRepository productRepo;
+    private ProductLookup productLookup;
 
     @Mock
     private StockItemRepository stockItemRepository;
@@ -59,6 +60,12 @@ public class BusinessProcessImplTest {
 
     @Mock
     private CustomerLookup customerLookup;
+
+    @Mock
+    private PickingOrderRepository pickingOrderRepository;
+
+    @Mock
+    private StockNotification stockNotification;
 
     @Test
     public void addCustomerWithExistingNamefails() throws Exception {
@@ -108,7 +115,10 @@ public class BusinessProcessImplTest {
     }
 
     @Test
-    public void addStockItemWithoutProductfails() throws Exception {
+    public void addStockItemWithoutProductFails() throws Exception {
+        stateSetup()
+                .havingProducts();
+
         ResultStatus actual = businessProcess.addItemToStock(Quantity.of(new ItemId("10"), 5L));
 
         assertThat(actual, is(ResultStatus.NOT_EXISTENT));
@@ -119,7 +129,7 @@ public class BusinessProcessImplTest {
         ItemId itemId = ItemId.of("10");
         Product product = productWith(itemId);
 
-        when(productRepo.findOne(itemId.getId())).thenReturn(product);
+        when(productLookup.findOne(itemId.getId())).thenReturn(Optional.of(product));
 
         businessProcess.addItemToStock(Quantity.of(itemId, 5L));
 
@@ -188,11 +198,11 @@ public class BusinessProcessImplTest {
         assertThat(captor.getValue(), containsPosition(Position.of(ItemId.of("4"), 3L)));
     }
 
-    private Matcher<ShoppingBasket> containsPosition(Position position) {
+    private Matcher<HasPositions> containsPosition(Position position) {
         return BiDescribingMatcherBuilder
-                .<Position, ShoppingBasket>matcherForExpected(position)
+                .<Position, HasPositions>matcherForExpected(position)
                     .withMatcher((actual, expected) -> actual.getPositions().contains(expected))
-                    .withExpectedDescriber((expected) -> ShoppingBasket.class.getSimpleName() + " containing " + expected)
+                    .withExpectedDescriber((expected) -> expected.getClass().getSimpleName() + " containing " + expected)
                     .withActualDescriber((actual) -> actual.getClass().getSimpleName() + " containsPosition [" +
                             actual.getPositions().stream()
                                     .map(Object::toString)
@@ -202,7 +212,8 @@ public class BusinessProcessImplTest {
 
     @Test
     public void contentOfEmptyBasketIsEmpty() throws Exception {
-        when(customerLookup.getShoppingBasketOfCustomer(anyString())).thenReturn(Optional.of(new ShoppingBasket()));
+        stateSetup()
+                .emptyShoppingBasket();
 
         List<Quantity<Product>> basketContent = businessProcess.getBasketContent("");
 
@@ -245,18 +256,58 @@ public class BusinessProcessImplTest {
         assertThat(captor.getValue(), containsPosition(Position.of(ItemId.of("5"), 1L)));
     }
 
-    @Ignore
     @Test
-    public void submitOrder() throws Exception {
-        Customer customer = new Customer();
-        customer.setId("3");
+    public void submitOrderWithEmptyBasketFails() throws Exception {
         stateSetup()
-                .havingCustomers(customer);
+                .emptyShoppingBasket();
+
+        ResultStatus status = businessProcess.submitOrder("3");
+
+        assertThat(status, is(ResultStatus.NOT_EXISTENT));
+    }
+
+    @Test
+    public void submitOrderCreatesOrderWithPositions() throws Exception {
+        Position position = Position.of(ItemId.of("5"), 4L);
+        stateSetup()
+                .havingShoppingBasket(position);
+
+        ResultStatus status = businessProcess.submitOrder("3");
+
+        assertThat(status, is(ResultStatus.OK));
+
+        ArgumentCaptor<Order> captor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(captor.capture());
+        assertThat(captor.getValue(), containsPosition(position));
+
+    }
+
+    @Test
+    public void submitOrderCreatesPickingOrder() throws Exception {
+        Position position = Position.of(ItemId.of("5"), 4L);
+        stateSetup()
+                .havingShoppingBasket(position);
 
         businessProcess.submitOrder("3");
 
+        ArgumentCaptor<PickingOrder> captor = ArgumentCaptor.forClass(PickingOrder.class);
+        verify(pickingOrderRepository).save(captor.capture());
+        assertThat(captor.getValue(), not(containsPosition(position)));
+        assertThat(captor.getValue().getStatus(), is(PickingOrder.PickingStatus.OPEN));
+    }
 
-        // T B C
+    @Test
+    public void submitOrderNotifiesStock() throws Exception {
+        Position position = Position.of(ItemId.of("5"), 4L);
+        stateSetup()
+                .havingShoppingBasket(position);
+
+        businessProcess.submitOrder("3");
+
+        ArgumentCaptor<PickingOrder> captor = ArgumentCaptor.forClass(PickingOrder.class);
+        verify(stockNotification).newPickingOrder(captor.capture());
+        assertThat(captor.getValue(), not(containsPosition(position)));
+        assertThat(captor.getValue().getStatus(), is(PickingOrder.PickingStatus.OPEN));
     }
 
     private StateSetup stateSetup() {
@@ -277,33 +328,51 @@ public class BusinessProcessImplTest {
     }
 
     private class StateSetup {
+        private Customer customer = new Customer();
+
         @SuppressWarnings("unchecked")
         public StateSetup havingProducts(Product... products) {
-            when(productRepo.findAll()).thenReturn(asList(products));
+            when(productLookup.findAll()).thenReturn(asList(products));
 
             doAnswer(invocation -> {
-                Collection<String> ids = (Collection<String>) invocation.getArguments()[0];
+                String id = invocation.getArgumentAt(0, String.class);
                 return stream(products)
-                        .filter(p -> ids.contains(p.getItemId().getId()));
-            }).when(productRepo).findByIdIn(anyCollectionOf(String.class));
+                        .filter(p -> p.getItemId().getId().equals(id))
+                        .findFirst();
+            }).when(productLookup).findOne(anyString());
+
+            doAnswer(invocation -> {
+                Function<Stream<Product>, ?> streamFunction = (Function<Stream<Product>, ?>) invocation.getArgumentAt(1, Function.class);
+                return streamFunction.apply(
+                        join(stream(products))
+                        .withKey(p -> p.getItemId().getId())
+                        .on((Stream<String>) invocation.getArgumentAt(0, Stream.class))
+                        .withKey(Function.identity())
+                        .group((p, idStream) -> p)
+                        .asStream());
+            }).when(productLookup).withProducts(any(), any(), any());
 
             return this;
         }
 
         public StateSetup havingShoppingBasket(Position... positions) {
-            when(customerLookup.getShoppingBasketOfCustomer(anyString()))
-                    .thenReturn(Optional.ofNullable(shoppingBasketWith(asList(positions))));
+            Customer customer = getCustomer();
+            customer.setShoppingBasket(shoppingBasketWith(asList(positions)));
+            when(customerLookup.getCustomer(anyString()))
+                    .thenReturn(Optional.ofNullable(customer));
             return this;
         }
 
         public StateSetup productExistsReturnsTrue() {
-            when(productRepo.exists(anyString())).thenReturn(true);
+            when(productLookup.exists(anyString())).thenReturn(true);
             return this;
         }
 
         public StateSetup emptyShoppingBasket() {
-            when(customerLookup.getShoppingBasketOfCustomer(anyString()))
-                    .thenReturn(Optional.of(new ShoppingBasket()));
+            Customer customer = getCustomer();
+            customer.setShoppingBasket(new ShoppingBasket());
+            when(customerLookup.getCustomer(anyString()))
+                    .thenReturn(Optional.of(customer));
             return this;
         }
 
@@ -319,14 +388,8 @@ public class BusinessProcessImplTest {
             return this;
         }
 
-        public StateSetup havingCustomers(Customer... customers) {
-            doAnswer(invocation -> {
-                String id = (String) invocation.getArguments()[0];
-                return stream(customers)
-                        .filter(customer -> customer.getId().equals(id))
-                        .findFirst();
-            }).when(customerLookup).getCustomer(anyString());
-            return this;
+        public Customer getCustomer() {
+            return customer;
         }
     }
 

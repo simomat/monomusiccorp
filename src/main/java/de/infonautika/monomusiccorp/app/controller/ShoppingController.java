@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/shopping")
@@ -27,7 +28,7 @@ public class ShoppingController {
     @RequestMapping("/basket/put")
     @PutMapping
     public ResultStatus putToBasket(@RequestBody Quantity<ItemId> quantity) {
-        return withCustomerId((id) ->
+        return withCustomerId(id ->
                 businessProcess.putToBasket(
                     id,
                     Quantity.of(quantity.getItem(), quantity.getQuantity())));
@@ -36,8 +37,8 @@ public class ShoppingController {
     @RequestMapping("/basket")
     @GetMapping
     public List<Quantity<Product>> getBasket() {
-        return withCustomerId(
-                (id) -> businessProcess.getBasketContent(id),
+        return withCustomerIdOrElse(
+                id -> businessProcess.getBasketContent(id),
                 Collections::emptyList);
     }
 
@@ -45,7 +46,7 @@ public class ShoppingController {
     @RequestMapping("/basket/remove")
     @DeleteMapping
     public ResultStatus removeFromBasket(@RequestBody Quantity<ItemId> quantity) {
-        return withCustomerId((id) -> {
+        return withCustomerId(id -> {
             businessProcess.removeFromBasket(id, quantity);
             return ResultStatus.OK;
         });
@@ -53,20 +54,27 @@ public class ShoppingController {
 
     @RequestMapping("/submitorder")
     public ResultStatus submitOrder() {
-        return withCustomerId((id) -> {
-            businessProcess.submitOrder(id);
-            return ResultStatus.OK;
-        });
+        return withCustomerId(id -> businessProcess.submitOrder(id));
+    }
+
+    @RequestMapping("/orders")
+    @GetMapping
+    public List<OrderStatus> getOrders() {
+        return withCustomerIdOrElse(
+                id -> businessProcess.getOrders(id).stream()
+                        .map(OrderStatus::from)
+                        .collect(Collectors.toList()),
+                Collections::emptyList);
     }
 
 
     private ResultStatus withCustomerId(Function<String, ResultStatus> consumer) {
-        return customerProvider.getCustomerId()
-                .map(consumer)
-                .orElse(ResultStatus.NO_CUSTOMER);
+        return withCustomerIdOrElse(
+                consumer,
+                () -> ResultStatus.NO_CUSTOMER);
     }
 
-    private <T> T withCustomerId(Function<String, T> function, Supplier<T> defaultResult) {
+    private <T> T withCustomerIdOrElse(Function<String, T> function, Supplier<T> defaultResult) {
         return customerProvider.getCustomerId()
                 .map(function)
                 .orElseGet(defaultResult);

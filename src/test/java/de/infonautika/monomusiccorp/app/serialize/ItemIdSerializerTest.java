@@ -15,7 +15,7 @@ public class ItemIdSerializerTest {
     public JsonTesterRule<ItemId> json = new JsonTesterRule<>();
 
     @Test
-    public void name() throws Exception {
+    public void serializesCorrectly() throws Exception {
         assertThat(json.write(new ItemId("23"))).isEqualToJson("{\"id\": \"23\"}");
     }
 }

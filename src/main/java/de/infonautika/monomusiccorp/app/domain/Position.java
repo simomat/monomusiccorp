@@ -33,10 +33,6 @@ public class Position {
         return quantity;
     }
 
-    public Position update(long newQuantity) {
-        return new Position(itemId, newQuantity);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
