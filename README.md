@@ -6,9 +6,9 @@
 So I stumbled into microservices recently and found some books and articles about it. When I decided to get my hands wet, I looked around for a dojo.
 But most stuff out there is more about the ops part of devops - service creation, dockerizing, ... etc. (like http://accordance.github.io/microservice-dojo/).
 
-Instead of writing a microservices application on the green, I also wanted to make some experience with transforming a monolith into a microservices based application and also learn about the DDD approach.
+Instead of writing a microservices application on the green, I also wanted to make some experience with transforming a monolith into a microservices based application and also learn more about the DDD approach.
 
-Inspired by the example domain of "MusicCorp" appearing in Sam Newmans "Building Microservices", I present you the Monolithic Music Corporation - monomusiccorp.
+Inspired by the example domain of "MusicCorp" appearing in Sam Newmans "Building Microservices", I present you the _Monolithic Music Corporation_ - monomusiccorp.
 
 
 #### Tech stack
@@ -22,7 +22,7 @@ Inspired by the example domain of "MusicCorp" appearing in Sam Newmans "Building
 Yes, [BusinessProcessImpl.java](https://github.com/simomat/monomusiccorp/blob/master/src/main/java/de/infonautika/monomusiccorp/app/business/BusinessProcessImpl.java) is a *clumsy mess*. It's all up on you to slice the domain.
 
 #### Run it
-- Check it out the repository, go to path
+- Check out the repository, go to path
 - Having `gradle` installed, run `./gradlew run` 
 - Go to `http://localhost:8080`, log in with user 'admin', password 'admin'
 
