@@ -10,8 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static java.util.Objects.requireNonNull;
-
 public class ModifiableUserDetailsManagerImpl implements ModifiableUserDetailsManager {
 
     private final Map<String, MutableUserDetails> users = new HashMap<>();
@@ -19,12 +17,11 @@ public class ModifiableUserDetailsManagerImpl implements ModifiableUserDetailsMa
     @Autowired
     private AuthenticationFacade authenticationFacade;
 
-
     @Override
     public void createUser(UserDetails user) {
-        requireNonNull(user);
-        requireNonNull(user.getUsername());
-        requireNonNull(user.getAuthorities());
+        Assert.notNull(user);
+        Assert.notNull(user.getUsername());
+        Assert.notNull(user.getAuthorities());
 
         Assert.isTrue(!userExists(user.getUsername()));
 
@@ -32,7 +29,7 @@ public class ModifiableUserDetailsManagerImpl implements ModifiableUserDetailsMa
     }
 
     private void putUser(UserDetails user) {
-        users.put(user.getUsername().toLowerCase(), new MutableUserDetails(user));
+        users.put(toUserKey(user.getUsername()), new MutableUserDetails(user));
     }
 
     @Override
@@ -42,40 +39,43 @@ public class ModifiableUserDetailsManagerImpl implements ModifiableUserDetailsMa
     }
 
     @Override
-    public void deleteUser(String username) {
-        users.remove(username.toLowerCase());
+    public void deleteUser(String userName) {
+        users.remove(toUserKey(userName));
+    }
+
+    private static String toUserKey(String userName) {
+        return userName.toLowerCase();
     }
 
     @Override
     public void changePassword(String oldPassword, String newPassword) {
-        Optional<String> currentUserName = authenticationFacade.getCurrentUserName();
-
-        if (!currentUserName.isPresent()) {
-            throw new AccessDeniedException("no current user.");
-        }
-
-        MutableUserDetails user = users.get(currentUserName.get().toLowerCase());
-
-        if (user == null) {
-            throw new IllegalStateException("Current user doesn't exist.");
-        }
-
-        user.setPassword(newPassword);
+        authenticationFacade.getCurrentUserName()
+                .map(userName ->
+                        getUser(userName)
+                            .map(user -> user.setPassword(newPassword))
+                            .orElseGet(() -> {
+                                throw new IllegalStateException("Current user doesn't exist.");
+                            }))
+                .orElseGet(() -> {
+                    throw new AccessDeniedException("no current user.");
+                });
     }
 
-
-    @Override
-    public boolean userExists(String username) {
-        return users.containsKey(username.toLowerCase());
+    private Optional<MutableUserDetails> getUser(String userName) {
+        return Optional.ofNullable(users.get(toUserKey(userName)));
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        MutableUserDetails userDetails = users.get(username.toLowerCase());
-        if (userDetails == null) {
-            throw new UsernameNotFoundException(username);
-        }
-        return userDetails;
+    public boolean userExists(String userName) {
+        return getUser(userName).isPresent();
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
+        return getUser(userName)
+                .orElseGet(() -> {
+                    throw new UsernameNotFoundException(userName);
+                });
     }
 
     @Override
