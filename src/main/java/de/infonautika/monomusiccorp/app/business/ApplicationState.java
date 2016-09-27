@@ -8,6 +8,8 @@ import de.infonautika.monomusiccorp.app.repository.ProductRepository;
 import de.infonautika.monomusiccorp.app.repository.StockItemRepository;
 import de.infonautika.monomusiccorp.app.security.DefaultUsers;
 import de.infonautika.monomusiccorp.app.security.SecurityService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,8 @@ import static java.util.Arrays.asList;
 
 @Service
 public class ApplicationState {
+
+    final Logger logger = LoggerFactory.getLogger(ApplicationState.class);
 
     @Autowired
     private ProductRepository productRepo;
@@ -32,6 +36,7 @@ public class ApplicationState {
     private CustomerRepository cusomerRepository;
 
     public void dropState() {
+        logger.info("dropping application state");
         stockItemRepository.deleteAll();
         productRepo.deleteAll();
         cusomerRepository.deleteAll();
@@ -40,6 +45,7 @@ public class ApplicationState {
     }
 
     public void createState() {
+        logger.info("creating application state");
         Product[] products = {
                 Product.create("AC/DC", "Back in Black"),
                 Product.create("The Byrds", "Fifth Dimension "),

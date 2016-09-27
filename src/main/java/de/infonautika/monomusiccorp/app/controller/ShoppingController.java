@@ -28,7 +28,7 @@ public class ShoppingController {
     @RequestMapping("/basket/put")
     @PutMapping
     public ResultStatus putToBasket(@RequestBody Quantity<ItemId> quantity) {
-        return withCustomerId((id) ->
+        return withCustomerId(id ->
                 businessProcess.putToBasket(
                     id,
                     Quantity.of(quantity.getItem(), quantity.getQuantity())));
@@ -54,10 +54,7 @@ public class ShoppingController {
 
     @RequestMapping("/submitorder")
     public ResultStatus submitOrder() {
-        return withCustomerId((id) -> {
-            businessProcess.submitOrder(id);
-            return ResultStatus.OK;
-        });
+        return withCustomerId(id -> businessProcess.submitOrder(id));
     }
 
     @RequestMapping("/orders")

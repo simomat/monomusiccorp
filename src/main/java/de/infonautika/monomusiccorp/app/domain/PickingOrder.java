@@ -38,5 +38,9 @@ public class PickingOrder implements HasPositions {
         return pickedItems;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public enum PickingStatus {OPEN}
 }

@@ -4,6 +4,8 @@ package de.infonautika.monomusiccorp.app.business;
 import de.infonautika.monomusiccorp.app.domain.*;
 import de.infonautika.monomusiccorp.app.repository.*;
 import de.infonautika.monomusiccorp.app.security.SecurityService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,8 @@ import static java.util.stream.Collectors.toList;
 
 @Service
 public class BusinessProcessImpl implements BusinessProcess {
+
+    final Logger logger = LoggerFactory.getLogger(BusinessProcessImpl.class);
 
     @Autowired
     private StockItemRepository stockItemRepository;
@@ -65,16 +69,21 @@ public class BusinessProcessImpl implements BusinessProcess {
                             createStockItem(product, quantity);
                             return ResultStatus.OK;
                         }).
-                        orElse(ResultStatus.NOT_EXISTENT));
+                        orElseGet(() -> {
+                            logger.debug("no product of {} found to add stock item", quantity.getItem());
+                            return ResultStatus.NOT_EXISTENT;
+                        }));
     }
 
     private void createStockItem(Product product, Quantity<ItemId> quantity) {
+        logger.debug("new stock item {} with quantity of {}", product.getItemId(), quantity.getQuantity());
         StockItem stockItem = StockItem.of(product, quantity.getQuantity());
         stockItemRepository.save(stockItem);
     }
 
     private void updateStockItemQuantity(StockItem stockItem, Quantity<ItemId> quantity) {
         assert Objects.equals(stockItem.getProduct().getItemId(), quantity.getItem());
+        logger.debug("update stock item {} quantity with {}", quantity.getItem(), stockItem.getQuantity());
         stockItem.addQuantity(quantity.getQuantity());
         stockItemRepository.save(stockItem);
     }
@@ -95,6 +104,7 @@ public class BusinessProcessImpl implements BusinessProcess {
     @Override
     public ResultStatus putToBasket(String customerId, Quantity<ItemId> quantity) {
         if (!itemExists(quantity.getItem())) {
+            logger.debug("user id {} tried to put {} to basket, but product does not exist", customerId, quantity.getItem());
             return ResultStatus.NOT_EXISTENT;
         }
 
@@ -104,6 +114,7 @@ public class BusinessProcessImpl implements BusinessProcess {
                     ShoppingBasket shoppingBasket = customer.getShoppingBasket();
                     shoppingBasket.put(quantity.getItem(), quantity.getQuantity());
                     shoppingBasketRepository.save(shoppingBasket);
+                    logger.debug("customer {} put {} to basket", customer.getUsername(), quantity);
                     return ResultStatus.OK;
                 });
     }
@@ -143,6 +154,7 @@ public class BusinessProcessImpl implements BusinessProcess {
                     ShoppingBasket shoppingBasket = customer.getShoppingBasket();
                     shoppingBasket.remove(quantity.getItem(), quantity.getQuantity());
                     shoppingBasketRepository.save(shoppingBasket);
+                    logger.debug("customer {} removed {} of {} from basket", customer.getUsername(), quantity.getQuantity(), quantity.getItem());
                 });
     }
 
@@ -150,10 +162,12 @@ public class BusinessProcessImpl implements BusinessProcess {
     public ResultStatus addCustomer(CustomerInfo customer) {
         ResultStatus resultStatus = securityService.addUser(customer);
         if (!isOk(resultStatus)) {
+            logger.info("failed to add customer {}", customer.getUsername());
             return resultStatus;
         }
 
         createCustomer(customer);
+        logger.info("customer {} added", customer.getUsername());
         return ResultStatus.OK;
     }
 
@@ -164,6 +178,7 @@ public class BusinessProcessImpl implements BusinessProcess {
                 customer -> {
                     ShoppingBasket shoppingBasket = customer.getShoppingBasket();
                     if (shoppingBasket.isEmpty()) {
+                        logger.debug("rejected submit an order with empty basket for customer {}", customer.getUsername());
                         return ResultStatus.NOT_EXISTENT;
                     }
 
@@ -171,9 +186,15 @@ public class BusinessProcessImpl implements BusinessProcess {
                     PickingOrder pickingOrder = createPickingOrder(order);
                     notifyNewPickingOrder(pickingOrder);
 
+                    clearShoppingBasket(shoppingBasket);
+
                     sendInvoice(order);
                     return ResultStatus.OK;
                 });
+    }
+
+    private void clearShoppingBasket(ShoppingBasket shoppingBasket) {
+
     }
 
     private ResultStatus withCustomer(String customerId, Function<Customer, ResultStatus> customerMapper) {
@@ -183,7 +204,10 @@ public class BusinessProcessImpl implements BusinessProcess {
     private <T> T withCustomer(String customerId, Function<Customer, T> customerMapper, Supplier<T> elseGet) {
         return customerLookup.getCustomer(customerId)
                 .map(customerMapper)
-                .orElse(elseGet.get());
+                .orElseGet(() -> {
+                    logger.debug("no customer with id {} found", customerId);
+                    return elseGet.get();
+                });
     }
 
     private void tryWithCustomer(String customerId, Consumer<Customer> consumer) {
@@ -206,6 +230,7 @@ public class BusinessProcessImpl implements BusinessProcess {
         pickingOrder.setStatus(PickingOrder.PickingStatus.OPEN);
         order.setPickingOrder(pickingOrder);
         pickingOrderRepository.save(pickingOrder);
+        logger.debug("picking order {} for order {} created", pickingOrder.getId(), order.getId());
         return pickingOrder;
     }
 
@@ -220,6 +245,7 @@ public class BusinessProcessImpl implements BusinessProcess {
         order.setShippingAddress(customer.getAddress());
         order.setSubmitTime(LocalDateTime.now());
         orderRepository.save(order);
+        logger.debug("order {} for customer {} created", order.getId(), customer.getUsername());
         return order;
     }
 

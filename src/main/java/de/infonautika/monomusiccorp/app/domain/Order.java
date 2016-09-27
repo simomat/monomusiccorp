@@ -65,4 +65,8 @@ public class Order implements HasPositions {
     public void setPickingOrder(PickingOrder pickingOrder) {
         this.pickingOrder = pickingOrder;
     }
+
+    public String getId() {
+        return id;
+    }
 }
