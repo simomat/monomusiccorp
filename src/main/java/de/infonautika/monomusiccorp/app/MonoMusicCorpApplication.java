@@ -24,9 +24,8 @@ import org.springframework.transaction.jta.JtaTransactionManager;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
+import java.util.HashMap;
 import java.util.Map;
-
-import static java.util.Collections.singletonMap;
 
 @SpringBootApplication
 public class MonoMusicCorpApplication extends JpaBaseConfiguration {
@@ -46,7 +45,10 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
 
     @Override
     protected Map<String, Object> getVendorProperties() {
-        return singletonMap("eclipselink.weaving", "false");
+        HashMap<String, Object> properties = new HashMap<>();
+        properties.put("eclipselink.weaving", "false");
+        properties.put("eclipselink.logging.level", "FINE");
+        return properties;
     }
 
     @Configuration

@@ -22,4 +22,20 @@ public class OrderStatus {
         orderStatus.status = order.getPickingOrder().getStatus();
         return orderStatus;
     }
+
+    public Address getShippingAddress() {
+        return shippingAddress;
+    }
+
+    public LocalDateTime getSubmitTime() {
+        return submitTime;
+    }
+
+    public List<Position> getPositions() {
+        return positions;
+    }
+
+    public PickingOrder.PickingStatus getStatus() {
+        return status;
+    }
 }
