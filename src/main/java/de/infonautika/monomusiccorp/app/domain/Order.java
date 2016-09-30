@@ -4,9 +4,11 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static java.util.stream.Collectors.toList;
+
 @Entity
 @Table(name = "xORDER")
-public class Order implements HasPositions {
+public class Order implements HasPricedPositions {
 
     @Id
     @GeneratedValue
@@ -17,7 +19,7 @@ public class Order implements HasPositions {
     private Customer customer;
 
     @ElementCollection
-    private List<Position> positions;
+    private List<PricedPosition> positions;
 
     @Embedded
     private Address shippingAddress;
@@ -25,15 +27,11 @@ public class Order implements HasPositions {
     @Column
     private LocalDateTime submitTime;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @PrimaryKeyJoinColumn
-    private PickingOrder pickingOrder;
-
     public void setCustomer(Customer customer) {
         this.customer = customer;
     }
 
-    public void setPositions(List<Position> positions) {
+    public void setPositions(List<PricedPosition> positions) {
         this.positions = positions;
     }
 
@@ -50,7 +48,7 @@ public class Order implements HasPositions {
     }
 
     @Override
-    public List<Position> getPositions() {
+    public List<PricedPosition> getPositions() {
         return positions;
     }
 
@@ -58,15 +56,11 @@ public class Order implements HasPositions {
         return shippingAddress;
     }
 
-    public PickingOrder getPickingOrder() {
-        return pickingOrder;
-    }
-
-    public void setPickingOrder(PickingOrder pickingOrder) {
-        this.pickingOrder = pickingOrder;
-    }
-
     public String getId() {
         return id;
+    }
+
+    public Customer getCustomer() {
+        return customer;
     }
 }

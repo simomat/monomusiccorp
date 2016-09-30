@@ -3,6 +3,8 @@ package de.infonautika.monomusiccorp.app.controller;
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.Quantity;
 import de.infonautika.monomusiccorp.app.domain.ItemId;
+import de.infonautika.monomusiccorp.app.domain.Money;
+import de.infonautika.monomusiccorp.app.domain.PricedPosition;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.intermediate.CustomerProvider;
 import org.junit.Before;
@@ -17,6 +19,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Optional;
 
+import static de.infonautika.monomusiccorp.app.domain.Currencies.EUR;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,13 +52,21 @@ public class ShoppingControllerTest {
 
     @Test
     public void getBasket() throws Exception {
-        Product product = Product.create("A", "T");
+        Product product = Product.create("A", "T", Money.of(7.98, EUR));
         product.setItemId(ItemId.of("5"));
-        when(businessProcess.getBasketContent(CUSTOMER_ID)).thenReturn(singletonList(Quantity.of(product, 2L)));
+        when(businessProcess.getBasketContent(CUSTOMER_ID)).thenReturn(singletonList(toPricedPosition(product, 2L)));
 
         mvc.perform(get("/shopping/basket"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("[{\"item\":{\"title\":\"T\", \"artist\":\"A\", \"itemId\":\"5\"}, \"quantity\": 2}]"));
+                .andExpect(content().json("[{\"item\":{\"title\":\"T\", \"artist\":\"A\", \"itemId\":\"5\", \"price\":{\"amount\":7.98 , \"currency\":\"EUR\"}}, \"quantity\": 2}]"));
+    }
+
+    private PricedPosition toPricedPosition(Product product, Long quantity) {
+        PricedPosition pricedPosition = new PricedPosition();
+        pricedPosition.setItemId(product.getItemId());
+        pricedPosition.setPrice(product.getPrice());
+        pricedPosition.setQuantity(quantity);
+        return pricedPosition;
     }
 
     @Test

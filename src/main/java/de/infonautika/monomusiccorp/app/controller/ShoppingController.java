@@ -4,7 +4,7 @@ import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.Quantity;
 import de.infonautika.monomusiccorp.app.business.ResultStatus;
 import de.infonautika.monomusiccorp.app.domain.ItemId;
-import de.infonautika.monomusiccorp.app.domain.Product;
+import de.infonautika.monomusiccorp.app.domain.PricedPosition;
 import de.infonautika.monomusiccorp.app.intermediate.CustomerProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +36,7 @@ public class ShoppingController {
 
     @RequestMapping("/basket")
     @GetMapping
-    public List<Quantity<Product>> getBasket() {
+    public List<PricedPosition> getBasket() {
         return withCustomerIdOrElse(
                 id -> businessProcess.getBasketContent(id),
                 Collections::emptyList);
@@ -60,9 +60,11 @@ public class ShoppingController {
     @RequestMapping("/orders")
     @GetMapping
     public List<OrderStatus> getOrders() {
+
+
         return withCustomerIdOrElse(
-                id -> businessProcess.getOrders(id).stream()
-                        .map(OrderStatus::from)
+                id -> businessProcess.getPickingOrders(id).stream()
+                        .map(order -> OrderStatus.from(order))
                         .collect(Collectors.toList()),
                 Collections::emptyList);
     }

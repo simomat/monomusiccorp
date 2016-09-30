@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Consumer;
@@ -49,6 +50,12 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     @Autowired
     private StockNotification stockNotification;
+
+    @Autowired
+    private InvoiceRepository invoiceRepository;
+
+    @Autowired
+    private InvoiceDelivery invoiceDelivery;
 
     @Override
     public Collection<Product> getAllProducts() {
@@ -122,26 +129,10 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     @Override
-    public List<Quantity<Product>> getBasketContent(String customerId) {
+    public List<PricedPosition> getBasketContent(String customerId) {
         return withCustomer(
                 customerId,
-                customer -> toProductQuantities(customer.getShoppingBasket().getPositions()),
-                Collections::emptyList);
-    }
-
-    private List<Quantity<Product>> toProductQuantities(List<Position> positions) {
-        return productLookup.withProducts(
-                positions.stream()
-                        .map(p -> p.getItemId().getId()),
-                products ->
-                    join(positions.stream())
-                    .withKey(Position::getItemId)
-                    .on(products)
-                    .withKey(Product::getItemId)
-                    .combine((pos, prod) ->
-                            Quantity.of(prod, pos.getQuantity()))
-                    .asStream()
-                    .collect(toList()),
+                customer -> toPricedPositions(customer.getShoppingBasket().getPositions()),
                 Collections::emptyList);
     }
 
@@ -180,15 +171,26 @@ public class BusinessProcessImpl implements BusinessProcess {
                         return ResultStatus.NOT_EXISTENT;
                     }
 
-                    Order order = createOrder(customer, shoppingBasket);
-                    PickingOrder pickingOrder = createPickingOrder(order);
-                    notifyNewPickingOrder(pickingOrder);
+                    Order order = createOrder(customer);
+                    orderRepository.save(order);
+                    logger.debug("created order for customer {} with {}", customer.getUsername(), shoppingBasket.getPositions());
 
                     clearShoppingBasket(customer);
 
-                    sendInvoice(order);
+                    processNewOrder(order);
+
                     return ResultStatus.OK;
                 });
+    }
+
+    private void processNewOrder(Order order) {
+        processShipment(order);
+        processBilling(order);
+    }
+
+    private void processShipment(Order order) {
+        PickingOrder pickingOrder = createPickingOrder(order);
+        notifyNewPickingOrder(pickingOrder);
     }
 
     private void clearShoppingBasket(Customer customer) {
@@ -219,17 +221,31 @@ public class BusinessProcessImpl implements BusinessProcess {
         return orderRepository.findByCustomerId(customerId);
     }
 
-    private void sendInvoice(Order order) {
+    @Override
+    public List<PickingOrder> getPickingOrders(String customerId) {
+        return pickingOrderRepository.findByOrderCustomerId();
+    }
 
+    private void processBilling(Order order) {
+        Invoice invoice = createInvoice(order);
+        invoiceDelivery.deliver(invoice);
+    }
+
+    private Invoice createInvoice(Order order) {
+        Invoice invoice = new Invoice();
+        invoice.setOrder(order);
+        invoice.setDate(LocalDate.now());
+        invoiceRepository.save(invoice);
+        return invoice;
     }
 
     private PickingOrder createPickingOrder(Order order) {
         PickingOrder pickingOrder = new PickingOrder();
         pickingOrder.setPickedItems(emptyList());
         pickingOrder.setStatus(PickingOrder.PickingStatus.OPEN);
-        order.setPickingOrder(pickingOrder);
+        pickingOrder.setOrder(order);
         pickingOrderRepository.save(pickingOrder);
-        logger.debug("picking order {} for order {} created", pickingOrder.getId(), order.getId());
+        logger.debug("created picking order for customer {} with {}", order.getCustomer().getUsername(), order.getPositions());
         return pickingOrder;
     }
 
@@ -237,15 +253,35 @@ public class BusinessProcessImpl implements BusinessProcess {
         stockNotification.newPickingOrder(pickingOrder);
     }
 
-    private Order createOrder(Customer customer, ShoppingBasket shoppingBasket) {
+    private Order createOrder(Customer customer) {
         Order order = new Order();
         order.setCustomer(customer);
-        order.setPositions(shoppingBasket.getPositions());
+        order.setPositions(toPricedPositions(customer.getShoppingBasket().getPositions()));
         order.setShippingAddress(customer.getAddress());
         order.setSubmitTime(LocalDateTime.now());
-        orderRepository.save(order);
-        logger.debug("order {} for customer {} created", order.getId(), customer.getUsername());
         return order;
+    }
+
+    private List<PricedPosition> toPricedPositions(List<Position> positions) {
+        return productLookup.withProducts(
+                positions.stream().map(p -> p.getItemId().getId()),
+                products ->
+                    join(products)
+                        .withKey(Product::getItemId)
+                        .on(positions.stream())
+                        .withKey(Position::getItemId)
+                        .combine(this::toPricedPosition)
+                        .asStream()
+                        .collect(toList()),
+                Collections::emptyList);
+    }
+
+    private PricedPosition toPricedPosition(Product prod, Position pos) {
+        PricedPosition pricedPosition = new PricedPosition();
+        pricedPosition.setItemId(pos.getItemId());
+        pricedPosition.setQuantity(pos.getQuantity());
+        pricedPosition.setPrice(prod.getPrice());
+        return pricedPosition;
     }
 
     private void createCustomer(CustomerInfo customerInfo) {

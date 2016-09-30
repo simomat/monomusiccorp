@@ -1,6 +1,7 @@
 package de.infonautika.monomusiccorp.app.business;
 
 
+import de.infonautika.monomusiccorp.app.domain.Money;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.domain.StockItem;
 import de.infonautika.monomusiccorp.app.repository.CustomerRepository;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import static de.infonautika.monomusiccorp.app.domain.Currencies.EUR;
 import static java.util.Arrays.asList;
 
 @Service
@@ -47,11 +49,11 @@ public class ApplicationState {
     public void createState() {
         logger.info("creating application state");
         Product[] products = {
-                Product.create("AC/DC", "Back in Black"),
-                Product.create("The Byrds", "Fifth Dimension "),
-                Product.create("AC/DC", "Let There Be Rock "),
-                Product.create("Jefferson Airplane", "Surrealistic Pillow"),
-                Product.create("The Easybeats", "Good Friday/Friday On My Mind")
+                Product.create("AC/DC", "Back in Black", Money.of(12.99, EUR)),
+                Product.create("The Byrds", "Fifth Dimension ", Money.of(9.99, EUR)),
+                Product.create("AC/DC", "Let There Be Rock ", Money.of(15.99, EUR)),
+                Product.create("Jefferson Airplane", "Surrealistic Pillow", Money.of(6.95, EUR)),
+                Product.create("The Easybeats", "Good Friday/Friday On My Mind", Money.of(7.98, EUR))
         };
 
         StockItem[] stocks = {

@@ -1,9 +1,6 @@
 package de.infonautika.monomusiccorp.app.business;
 
-import de.infonautika.monomusiccorp.app.domain.ItemId;
-import de.infonautika.monomusiccorp.app.domain.Order;
-import de.infonautika.monomusiccorp.app.domain.Product;
-import de.infonautika.monomusiccorp.app.domain.StockItem;
+import de.infonautika.monomusiccorp.app.domain.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -17,7 +14,7 @@ public interface BusinessProcess {
 
     ResultStatus putToBasket(String customerId, Quantity<ItemId> quantity);
 
-    List<Quantity<Product>> getBasketContent(String customerId);
+    List<PricedPosition> getBasketContent(String customerId);
 
     void removeFromBasket(String customerId, Quantity<ItemId> quantity);
 
@@ -25,5 +22,7 @@ public interface BusinessProcess {
 
     ResultStatus submitOrder(String customerId);
 
-    List<Order> getOrders(String id);
+    List<Order> getOrders(String customerId);
+
+    List<PickingOrder> getPickingOrders(String customerId);
 }
