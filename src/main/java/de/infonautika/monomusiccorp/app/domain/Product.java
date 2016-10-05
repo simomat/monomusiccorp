@@ -1,8 +1,5 @@
 package de.infonautika.monomusiccorp.app.domain;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import de.infonautika.monomusiccorp.app.serialize.ItemIdSerializer;
-
 import javax.persistence.*;
 import java.util.Objects;
 
@@ -28,13 +25,12 @@ public class Product {
         return product;
     }
 
-    @JsonSerialize(using = ItemIdSerializer.class)
-    public ItemId getItemId() {
-        return new ItemId(id);
+    public String getId() {
+        return id;
     }
 
-    public void setItemId(ItemId itemId) {
-        id = itemId.getId();
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getArtist() {

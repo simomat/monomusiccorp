@@ -20,23 +20,23 @@ public class ShoppingBasket implements HasPositions {
     @ElementCollection
     private List<Position> positions = new ArrayList<>();
 
-    public void put(ItemId itemId, Long quantity) {
-        if (positionExists(itemId)) {
-            updatePositionQuantity(itemId, quantity);
+    public void put(Product product, Long quantity) {
+        if (positionExists(product)) {
+            updatePositionQuantity(product, quantity);
         } else {
-            positions.add(new Position(itemId, quantity));
+            positions.add(new Position(product, quantity));
         }
         removeQuantitiesBelowOne();
     }
 
-    private void updatePositionQuantity(ItemId itemId, Long quantity) {
+    private void updatePositionQuantity(Product product, Long quantity) {
         positions = positions.stream()
-                .map(p -> p.getItemId().equals(itemId) ? new Position(itemId, p.getQuantity() + quantity) : p)
+                .map(p -> p.getProduct().getId().equals(product.getId()) ? new Position(product, p.getQuantity() + quantity) : p)
                 .collect(toList());
     }
 
-    private boolean positionExists(ItemId itemId) {
-        return positions.stream().anyMatch(p -> p.getItemId().equals(itemId));
+    private boolean positionExists(Product product) {
+        return positions.stream().anyMatch(p -> p.getProduct().getId().equals(product.getId()));
     }
 
     private void removeQuantitiesBelowOne() {
@@ -45,8 +45,16 @@ public class ShoppingBasket implements HasPositions {
                 .collect(toList());
     }
 
-    public void remove(ItemId itemId, Long quantity) {
-        put(itemId, -quantity);
+    public void remove(String productId, Long quantity) {
+        positions.stream()
+                .map(Position::getProduct)
+                .filter(prod -> prod.getId().equals(productId))
+                .findFirst()
+                .ifPresent(prod -> remove(prod, quantity));
+    }
+
+    public void remove(Product product, Long quantity) {
+        put(product, -quantity);
     }
 
     @Override

@@ -9,8 +9,9 @@ public class PricedPosition {
     @Embedded
     private Money price;
 
-    @Basic
-    private ItemId itemId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
+    private Product product;
 
     @Basic
     private Long quantity;
@@ -19,8 +20,8 @@ public class PricedPosition {
         return price;
     }
 
-    public void setItemId(ItemId itemId) {
-        this.itemId = itemId;
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
     public void setQuantity(Long quantity) {
@@ -31,9 +32,9 @@ public class PricedPosition {
         this.price = price;
     }
 
-    public static PricedPosition of(ItemId itemId, Long quantity, Money price) {
+    public static PricedPosition of(Product product, Long quantity, Money price) {
         PricedPosition pricedPosition = new PricedPosition();
-        pricedPosition.setItemId(itemId);
+        pricedPosition.setProduct(product);
         pricedPosition.setQuantity(quantity);
         pricedPosition.setPrice(price);
         return pricedPosition;
@@ -45,20 +46,20 @@ public class PricedPosition {
         if (o == null || getClass() != o.getClass()) return false;
         PricedPosition that = (PricedPosition) o;
         return Objects.equals(price, that.price) &&
-                Objects.equals(itemId, that.itemId) &&
+                Objects.equals(product, that.product) &&
                 Objects.equals(quantity, that.quantity);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(price, itemId, quantity);
+        return Objects.hash(price, product, quantity);
     }
 
     @Override
     public String toString() {
         return "PricedPosition{" +
                 "price=" + price +
-                ", itemId=" + itemId +
+                ", product=" + product +
                 ", quantity=" + quantity +
                 '}';
     }

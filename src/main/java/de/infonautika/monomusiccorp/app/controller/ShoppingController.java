@@ -3,8 +3,7 @@ package de.infonautika.monomusiccorp.app.controller;
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.Quantity;
 import de.infonautika.monomusiccorp.app.business.ResultStatus;
-import de.infonautika.monomusiccorp.app.domain.ItemId;
-import de.infonautika.monomusiccorp.app.domain.PricedPosition;
+import de.infonautika.monomusiccorp.app.domain.Position;
 import de.infonautika.monomusiccorp.app.intermediate.CustomerProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +26,7 @@ public class ShoppingController {
 
     @RequestMapping("/basket/put")
     @PutMapping
-    public ResultStatus putToBasket(@RequestBody Quantity<ItemId> quantity) {
+    public ResultStatus putToBasket(@RequestBody Quantity<String> quantity) {
         return withCustomerId(id ->
                 businessProcess.putToBasket(
                     id,
@@ -36,7 +35,7 @@ public class ShoppingController {
 
     @RequestMapping("/basket")
     @GetMapping
-    public List<PricedPosition> getBasket() {
+    public List<Position> getBasket() {
         return withCustomerIdOrElse(
                 id -> businessProcess.getBasketContent(id),
                 Collections::emptyList);
@@ -45,7 +44,7 @@ public class ShoppingController {
 
     @RequestMapping("/basket/remove")
     @DeleteMapping
-    public ResultStatus removeFromBasket(@RequestBody Quantity<ItemId> quantity) {
+    public ResultStatus removeFromBasket(@RequestBody Quantity<String> quantity) {
         return withCustomerId(id -> {
             businessProcess.removeFromBasket(id, quantity);
             return ResultStatus.OK;
@@ -60,11 +59,9 @@ public class ShoppingController {
     @RequestMapping("/orders")
     @GetMapping
     public List<OrderStatus> getOrders() {
-
-
         return withCustomerIdOrElse(
                 id -> businessProcess.getPickingOrders(id).stream()
-                        .map(order -> OrderStatus.from(order))
+                        .map(OrderStatus::from)
                         .collect(Collectors.toList()),
                 Collections::emptyList);
     }

@@ -12,9 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static de.infonautika.monomusiccorp.app.business.ResultStatus.isOk;
 import static de.infonautika.streamjoin.Join.join;
@@ -63,7 +61,7 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     @Override
-    public ResultStatus addItemToStock(Quantity<ItemId> quantity) {
+    public ResultStatus addItemToStock(Quantity<String> quantity) {
         return findStockItem(quantity.getItem())
                 .map(stockItem -> {
                     updateStockItemQuantity(stockItem, quantity);
@@ -80,25 +78,25 @@ public class BusinessProcessImpl implements BusinessProcess {
                         }));
     }
 
-    private void createStockItem(Product product, Quantity<ItemId> quantity) {
-        logger.debug("new stock item {} with quantity of {}", product.getItemId(), quantity.getQuantity());
+    private void createStockItem(Product product, Quantity<String> quantity) {
+        logger.debug("new stock item {} with quantity of {}", product.getId(), quantity.getQuantity());
         StockItem stockItem = StockItem.of(product, quantity.getQuantity());
         stockItemRepository.save(stockItem);
     }
 
-    private void updateStockItemQuantity(StockItem stockItem, Quantity<ItemId> quantity) {
-        assert Objects.equals(stockItem.getProduct().getItemId(), quantity.getItem());
+    private void updateStockItemQuantity(StockItem stockItem, Quantity<String> quantity) {
+        assert Objects.equals(stockItem.getProduct().getId(), quantity.getItem());
         logger.debug("update stock item {} quantity with {}", quantity.getItem(), stockItem.getQuantity());
         stockItem.addQuantity(quantity.getQuantity());
         stockItemRepository.save(stockItem);
     }
 
-    private Optional<StockItem> findStockItem(ItemId itemId) {
-        return Optional.ofNullable(stockItemRepository.findByProductId(itemId.getId()));
+    private Optional<StockItem> findStockItem(String productId) {
+        return Optional.ofNullable(stockItemRepository.findByProductId(productId));
     }
 
-    private Optional<Product> getProduct(ItemId itemId) {
-        return productLookup.findOne(itemId.getId());
+    private Optional<Product> getProduct(String productId) {
+        return productLookup.findOne(productId);
    }
 
     @Override
@@ -107,38 +105,35 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     @Override
-    public ResultStatus putToBasket(String customerId, Quantity<ItemId> quantity) {
-        if (!itemExists(quantity.getItem())) {
-            logger.debug("user id {} tried to put {} to basket, but product does not exist", customerId, quantity.getItem());
-            return ResultStatus.NOT_EXISTENT;
-        }
-
-        return withCustomer(
-                customerId,
-                customer -> {
-                    ShoppingBasket shoppingBasket = customer.getShoppingBasket();
-                    shoppingBasket.put(quantity.getItem(), quantity.getQuantity());
-                    shoppingBasketRepository.save(shoppingBasket);
-                    logger.debug("customer {} put {} to basket", customer.getUsername(), quantity);
-                    return ResultStatus.OK;
+    public ResultStatus putToBasket(String customerId, Quantity<String> quantity) {
+        return productLookup.findOne(quantity.getItem())
+                .map(product ->
+                    withCustomer(
+                        customerId,
+                        customer -> {
+                            ShoppingBasket shoppingBasket = customer.getShoppingBasket();
+                            shoppingBasket.put(product, quantity.getQuantity());
+                            shoppingBasketRepository.save(shoppingBasket);
+                            logger.debug("customer {} put {} to basket", customer.getUsername(), quantity);
+                            return ResultStatus.OK;
+                        }))
+                .orElseGet(() -> {
+                    logger.debug("user id {} tried to put {} to basket, but product does not exist", customerId, quantity.getItem());
+                    return ResultStatus.NOT_EXISTENT;
                 });
     }
 
-    private boolean itemExists(ItemId item) {
-        return productLookup.exists(item.getId());
-    }
-
     @Override
-    public List<PricedPosition> getBasketContent(String customerId) {
-        return withCustomer(
+    public List<Position> getBasketContent(String customerId) {
+        return customerLookup.withCustomer(
                 customerId,
-                customer -> toPricedPositions(customer.getShoppingBasket().getPositions()),
+                customer -> customer.getShoppingBasket().getPositions(),
                 Collections::emptyList);
     }
 
     @Override
-    public void removeFromBasket(String customerId, Quantity<ItemId> quantity) {
-        tryWithCustomer(customerId,
+    public void removeFromBasket(String customerId, Quantity<String> quantity) {
+        customerLookup.tryWithCustomer(customerId,
                 customer -> {
                     ShoppingBasket shoppingBasket = customer.getShoppingBasket();
                     shoppingBasket.remove(quantity.getItem(), quantity.getQuantity());
@@ -171,16 +166,19 @@ public class BusinessProcessImpl implements BusinessProcess {
                         return ResultStatus.NOT_EXISTENT;
                     }
 
-                    Order order = createOrder(customer);
-                    orderRepository.save(order);
-                    logger.debug("created order for customer {} with {}", customer.getUsername(), shoppingBasket.getPositions());
-
+                    Order order = createAndSaveOrder(customer, shoppingBasket);
                     clearShoppingBasket(customer);
-
                     processNewOrder(order);
 
                     return ResultStatus.OK;
                 });
+    }
+
+    private Order createAndSaveOrder(Customer customer, ShoppingBasket shoppingBasket) {
+        Order order = createOrder(customer);
+        orderRepository.save(order);
+        logger.debug("created order for customer {} with {}", customer.getUsername(), shoppingBasket.getPositions());
+        return order;
     }
 
     private void processNewOrder(Order order) {
@@ -199,31 +197,12 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     private ResultStatus withCustomer(String customerId, Function<Customer, ResultStatus> customerMapper) {
-        return withCustomer(customerId, customerMapper, () -> ResultStatus.NO_CUSTOMER);
-    }
-
-    private <T> T withCustomer(String customerId, Function<Customer, T> customerMapper, Supplier<T> elseGet) {
-        return customerLookup.getCustomer(customerId)
-                .map(customerMapper)
-                .orElseGet(() -> {
-                    logger.debug("no customer with id {} found", customerId);
-                    return elseGet.get();
-                });
-    }
-
-    private void tryWithCustomer(String customerId, Consumer<Customer> consumer) {
-        customerLookup.getCustomer(customerId)
-                .ifPresent(consumer);
-    }
-
-    @Override
-    public List<Order> getOrders(String customerId) {
-        return orderRepository.findByCustomerId(customerId);
+        return customerLookup.withCustomer(customerId, customerMapper, () -> ResultStatus.NO_CUSTOMER);
     }
 
     @Override
     public List<PickingOrder> getPickingOrders(String customerId) {
-        return pickingOrderRepository.findByOrderCustomerId();
+        return pickingOrderRepository.findByOrderCustomerId(customerId);
     }
 
     private void processBilling(Order order) {
@@ -264,12 +243,12 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     private List<PricedPosition> toPricedPositions(List<Position> positions) {
         return productLookup.withProducts(
-                positions.stream().map(p -> p.getItemId().getId()),
+                positions.stream().map(p -> p.getProduct().getId()),
                 products ->
                     join(products)
-                        .withKey(Product::getItemId)
+                        .withKey(Product::getId)
                         .on(positions.stream())
-                        .withKey(Position::getItemId)
+                        .withKey(position -> position.getProduct().getId())
                         .combine(this::toPricedPosition)
                         .asStream()
                         .collect(toList()),
@@ -278,7 +257,7 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     private PricedPosition toPricedPosition(Product prod, Position pos) {
         PricedPosition pricedPosition = new PricedPosition();
-        pricedPosition.setItemId(pos.getItemId());
+        pricedPosition.setProduct(pos.getProduct());
         pricedPosition.setQuantity(pos.getQuantity());
         pricedPosition.setPrice(prod.getPrice());
         return pricedPosition;

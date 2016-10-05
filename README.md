@@ -16,7 +16,7 @@ Inspired by the example domain of "MusicCorp" appearing in Sam Newmans "Building
 - Spring Data JPA providing repositories etc. on top of JPA2 defined Entities
 - EclipseLink as JPA implementation
 - Apache Derby as database
-- UI: no UI, consider the REST API as top level for now. To simplify testing of REST APIs and not using cUrl all the way, there is a very simple web interface which calls the services.
+- UI: no UI, consider the no-HAL REST API as top level for now. To simplify testing of REST APIs and not using cUrl all the way, there is a very simple web interface which calls the services.
 
 #### Things to consider
 Yes, [BusinessProcessImpl.java](https://github.com/simomat/monomusiccorp/blob/master/src/main/java/de/infonautika/monomusiccorp/app/business/BusinessProcessImpl.java) is a *clumsy mess*. It's all up on you to slice the domain.

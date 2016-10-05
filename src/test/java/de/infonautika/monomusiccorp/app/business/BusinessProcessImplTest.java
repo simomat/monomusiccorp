@@ -15,6 +15,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -113,17 +114,17 @@ public class BusinessProcessImplTest {
         stateSetup()
                 .havingProducts();
 
-        ResultStatus actual = businessProcess.addItemToStock(Quantity.of(new ItemId("10"), 5L));
+        ResultStatus actual = businessProcess.addItemToStock(Quantity.of("10", 5L));
 
         assertThat(actual, is(ResultStatus.NOT_EXISTENT));
     }
 
     @Test
     public void addStockItemCreatesNew() throws Exception {
-        ItemId itemId = ItemId.of("10");
+        String itemId = "10";
         Product product = productOf(itemId);
 
-        when(productLookup.findOne(itemId.getId())).thenReturn(Optional.of(product));
+        when(productLookup.findOne(itemId)).thenReturn(Optional.of(product));
 
         businessProcess.addItemToStock(Quantity.of(itemId, 5L));
 
@@ -134,27 +135,27 @@ public class BusinessProcessImplTest {
     @Test
     public void addStockItemUpdatesExisting() throws Exception {
         stateSetup()
-                .havingStockOf(StockItem.of(productOf(ItemId.of("10")), 5L));
+                .havingStockOf(StockItem.of(productOf("10"), 5L));
 
-        businessProcess.addItemToStock(Quantity.of(ItemId.of("10"), 6L));
+        businessProcess.addItemToStock(Quantity.of("10", 6L));
 
         verify(stockItemRepository).save(stockItemCaptor.capture());
-        assertThat(stockItemCaptor.getValue(), equalsStockItem(StockItem.of(productOf(ItemId.of("10")), 11L)));
+        assertThat(stockItemCaptor.getValue(), equalsStockItem(StockItem.of(productOf("10"), 11L)));
     }
 
     private Matcher<StockItem> equalsStockItem(StockItem stockItem) {
         return matcherForExpected(stockItem)
                 .matchesWith((actual, expected) ->
                         areEqual(expected.getQuantity(), actual.getQuantity()) &&
-                        areEqual(expected.getProduct().getItemId(), actual.getProduct().getItemId()))
+                        areEqual(expected.getProduct().getId(), actual.getProduct().getId()))
                 .describesTo((item) -> item.getClass().getSimpleName() + " with quantity " + item.getQuantity() +
-                        " and Product " + item.getProduct().getItemId())
+                        " and Product " + item.getProduct().getId())
                 .andBuild();
     }
 
     @Test
     public void putNonExistingItemToBasketFails() throws Exception {
-        ResultStatus actual = businessProcess.putToBasket("", Quantity.of(ItemId.of("5"), 3L));
+        ResultStatus actual = businessProcess.putToBasket("", Quantity.of("5", 3L));
 
         assertThat(actual, is(ResultStatus.NOT_EXISTENT));
     }
@@ -162,29 +163,25 @@ public class BusinessProcessImplTest {
     @Test
     public void putToBasketReturnsOk() throws Exception {
         stateSetup()
-                .productExistsReturnsTrue()
+                .havingProducts(productOf("5"))
                 .emptyShoppingBasket();
 
-        ResultStatus actual = businessProcess.putToBasket("", Quantity.of(new ItemId("5"), 3L));
+        ResultStatus actual = businessProcess.putToBasket("", Quantity.of("5", 3L));
 
         assertThat(actual, is(ResultStatus.OK));
     }
 
     @Test
     public void putToBasketUpdatesBasket() throws Exception {
+        Product product = productOf("4");
         stateSetup()
-                .productExistsReturnsTrue()
+                .havingProducts(product)
                 .emptyShoppingBasket();
 
-        businessProcess.putToBasket("", Quantity.of(ItemId.of("4"), 3L));
-
-        // when verifying with argThat(Matcher<T> matcher),
-        // Mockito does not call TypeSafeMatcher.describeMismatchSafely()
-        // so a mismatching accepted value is only described with toString() :(
-//        verify(shoppingBasketRepository).save(argThat(containsPosition(Position.of(ItemId.of("5"), 3L))));
+        businessProcess.putToBasket("", Quantity.of("4", 3L));
 
         verify(shoppingBasketRepository).save(shoppingBasketCaptor.capture());
-        assertThat(shoppingBasketCaptor.getValue(), containsPosition(Position.of(ItemId.of("4"), 3L)));
+        assertThat(shoppingBasketCaptor.getValue(), containsPosition(Position.of(product, 3L)));
     }
 
     private Matcher<HasPositions> containsPosition(Position position) {
@@ -216,44 +213,46 @@ public class BusinessProcessImplTest {
         stateSetup()
                 .emptyShoppingBasket();
 
-        List<PricedPosition> basketContent = businessProcess.getBasketContent("");
+        List<Position> basketContent = businessProcess.getBasketContent("");
 
         assertThat(basketContent, is(empty()));
     }
 
     @Test
     public void contentOfBasketIsReturned() throws Exception {
-        ItemId itemId1 = ItemId.of("1");
-        ItemId itemId2 = ItemId.of("2");
+        String productId1 = "1";
+        String productId2 = "2";
 
+        Product product1 = productOf(productId1, Money.of(1d, EUR));
+        Product product2 = productOf(productId2, Money.of(2d, EUR));
         stateSetup()
                 .havingProducts(
-                        productOf(itemId1),
-                        productOf(itemId2),
-                        productOf(ItemId.of("3")))
+                        product1,
+                        product2,
+                        productOf("3"))
                 .havingShoppingBasket(
-                        Position.of(itemId1, 1L),
-                        Position.of(itemId2, 2L));
+                        Position.of(product1, 1L),
+                        Position.of(product2, 2L));
 
 
-        List<PricedPosition> basketContent = businessProcess.getBasketContent("");
+        List<Position> basketContent = businessProcess.getBasketContent("");
 
         //noinspection unchecked
         assertThat(basketContent, containsInAnyOrder(
-                quantityOfProduct(itemId1, 1L),
-                quantityOfProduct(itemId2, 2L)));
+                Position.of(product1, 1L),
+                Position.of(product2, 2L)));
     }
 
     @Test
     public void removeFromBasketUpdatesBasket() throws Exception {
-        Position position = Position.of(ItemId.of("5"), 4L);
+        Position position = Position.of(productOf("5"), 4L);
         stateSetup()
                 .havingShoppingBasket(position);
 
-        businessProcess.removeFromBasket("", Quantity.of(ItemId.of("5"), 3L));
+        businessProcess.removeFromBasket("", Quantity.of("5", 3L));
 
         verify(shoppingBasketRepository).save(shoppingBasketCaptor.capture());
-        assertThat(shoppingBasketCaptor.getValue(), containsPosition(Position.of(ItemId.of("5"), 1L)));
+        assertThat(shoppingBasketCaptor.getValue(), containsPosition(Position.of(productOf("5"), 1L)));
     }
 
     @Test
@@ -268,30 +267,30 @@ public class BusinessProcessImplTest {
 
     @Test
     public void submitOrderCreatesOrderWithPositions() throws Exception {
-        ItemId itemId = ItemId.of("5");
         Money price = Money.of(12d, EUR);
+        Product product = productOf("5", price);
         stateSetup()
-                .havingProducts(productOf(itemId, price))
-                .havingShoppingBasket(Position.of(itemId, 4L));
+                .havingProducts(product)
+                .havingShoppingBasket(Position.of(product, 4L));
 
         ResultStatus status = businessProcess.submitOrder("3");
 
         assertThat(status, is(ResultStatus.OK));
 
         verify(orderRepository).save(orderCaptor.capture());
-        assertThat(orderCaptor.getValue(), containsPricedPosition(PricedPosition.of(itemId, 4L, price)));
+        assertThat(orderCaptor.getValue(), containsPricedPosition(PricedPosition.of(product, 4L, price)));
 
     }
 
-    private Product productOf(ItemId itemId, Money price) {
-        Product product = productOf(itemId);
+    private Product productOf(String productId, Money price) {
+        Product product = productOf(productId);
         product.setPrice(price);
         return product;
     }
 
     @Test
     public void submitOrderCreatesPickingOrder() throws Exception {
-        Position position = Position.of(ItemId.of("5"), 4L);
+        Position position = Position.of(productOf("5"), 4L);
         stateSetup()
                 .havingShoppingBasket(position);
 
@@ -304,7 +303,7 @@ public class BusinessProcessImplTest {
 
     @Test
     public void submitOrderNotifiesStock() throws Exception {
-        Position position = Position.of(ItemId.of("5"), 4L);
+        Position position = Position.of(productOf("5"), 4L);
         stateSetup()
                 .havingShoppingBasket(position);
 
@@ -317,7 +316,7 @@ public class BusinessProcessImplTest {
 
     @Test
     public void submitOrderClearsShoppingBasket() throws Exception {
-        Position position = Position.of(ItemId.of("5"), 4L);
+        Position position = Position.of(productOf("5"), 4L);
         stateSetup()
                 .havingShoppingBasket(position);
 
@@ -328,57 +327,68 @@ public class BusinessProcessImplTest {
 
     @Test
     public void submitOrderCreatesInvoice() throws Exception {
-        ItemId itemId = ItemId.of("5");
         Money price = Money.of(2d, EUR);
+        Product product = productOf("5", price);
         stateSetup()
-                .havingProducts(productOf(itemId, price))
-                .havingShoppingBasket(Position.of(itemId, 4L));
+                .havingProducts(product)
+                .havingShoppingBasket(Position.of(product, 4L));
 
         businessProcess.submitOrder("3");
 
         verify(invoiceRepository).save(invoiceCaptor.capture());
-        assertThat(invoiceCaptor.getValue(), containsPricedPosition(PricedPosition.of(itemId, 4L, price)));
+        assertThat(invoiceCaptor.getValue(), containsPricedPosition(PricedPosition.of(product, 4L, price)));
     }
 
     @Test
     public void submitOrderDeliversInvoice() throws Exception {
-        ItemId itemId = ItemId.of("5");
         Money price = Money.of(2d, EUR);
+        Product product = productOf("5", price);
         stateSetup()
-                .havingProducts(productOf(itemId, price))
-                .havingShoppingBasket(Position.of(itemId, 4L));
+                .havingProducts(product)
+                .havingShoppingBasket(Position.of(product, 4L));
 
         businessProcess.submitOrder("3");
 
         verify(invoiceDelivery).deliver(invoiceCaptor.capture());
-        assertThat(invoiceCaptor.getValue(), containsPricedPosition(PricedPosition.of(itemId, 4L, price)));
+        assertThat(invoiceCaptor.getValue(), containsPricedPosition(PricedPosition.of(product, 4L, price)));
     }
 
     private StateSetup stateSetup() {
         return new StateSetup();
     }
 
-    private Product productOf(ItemId itemId) {
+    private Product productOf(String productId) {
         Product product = new Product();
-        product.setItemId(itemId);
+        product.setId(productId);
         return product;
-    }
-
-    private Quantity<Product> quantityOfProduct(ItemId itemId, long quantity) {
-        Product product = new Product();
-        product.setItemId(itemId);
-        return Quantity.of(product, quantity);
     }
 
     private class StateSetup {
         private Customer customer = new Customer();
+
+        public StateSetup() {
+            havingCustomer(customer);
+        }
+
+        private void havingCustomer(Customer customer) {
+            doAnswer(invocation -> {
+                Consumer<Customer> customerConsumer = invocation.getArgument(1);
+                customerConsumer.accept(customer);
+                return null;
+            }).when(customerLookup).tryWithCustomer(anyString(), any());
+
+            doAnswer(invocation -> {
+                Function<Customer, ?> customerConsumer = invocation.getArgument(1);
+                return customerConsumer.apply(customer);
+            }).when(customerLookup).withCustomer(anyString(), any(), any());
+        }
 
         @SuppressWarnings("unchecked")
         public StateSetup havingProducts(Product... products) {
             doAnswer(invocation -> {
                 String id = invocation.getArgument(0);
                 return stream(products)
-                        .filter(p -> p.getItemId().getId().equals(id))
+                        .filter(p -> p.getId().equals(id))
                         .findFirst();
             }).when(productLookup).findOne(anyString());
 
@@ -386,7 +396,7 @@ public class BusinessProcessImplTest {
                 Function<Stream<Product>, ?> streamFunction = invocation.getArgument(1);
                 return streamFunction.apply(
                         join(stream(products))
-                        .withKey(p -> p.getItemId().getId())
+                        .withKey(Product::getId)
                         .on((Stream<String>) invocation.getArgument(0))
                         .withKey(Function.identity())
                         .group((p, idStream) -> p)
@@ -399,21 +409,12 @@ public class BusinessProcessImplTest {
         public StateSetup havingShoppingBasket(Position... positions) {
             Customer customer = getCustomer();
             customer.setShoppingBasket(shoppingBasketWith(asList(positions)));
-            when(customerLookup.getCustomer(anyString()))
-                    .thenReturn(Optional.of(customer));
-            return this;
-        }
-
-        public StateSetup productExistsReturnsTrue() {
-            when(productLookup.exists(anyString())).thenReturn(true);
             return this;
         }
 
         public StateSetup emptyShoppingBasket() {
             Customer customer = getCustomer();
             customer.setShoppingBasket(new ShoppingBasket());
-            when(customerLookup.getCustomer(anyString()))
-                    .thenReturn(Optional.of(customer));
             return this;
         }
 
@@ -422,7 +423,7 @@ public class BusinessProcessImplTest {
                 String id = (String) invocation.getArguments()[0];
                 //noinspection OptionalGetWithoutIsPresent
                 return stream(stockItems)
-                        .filter(stockItem -> stockItem.getProduct().getItemId().getId().equals(id))
+                        .filter(stockItem -> stockItem.getProduct().getId().equals(id))
                         .findFirst().get();
 
             }).when(stockItemRepository).findByProductId(anyString());
@@ -437,7 +438,7 @@ public class BusinessProcessImplTest {
 
     private ShoppingBasket shoppingBasketWith(List<Position> positions) {
         ShoppingBasket shoppingBasket = new ShoppingBasket();
-        positions.forEach(position -> shoppingBasket.put(position.getItemId(), position.getQuantity()));
+        positions.forEach(position -> shoppingBasket.put(position.getProduct(), position.getQuantity()));
         return shoppingBasket;
     }
 }

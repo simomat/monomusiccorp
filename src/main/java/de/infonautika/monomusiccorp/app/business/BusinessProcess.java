@@ -8,21 +8,19 @@ import java.util.List;
 public interface BusinessProcess {
     Collection<Product> getAllProducts();
 
-    ResultStatus addItemToStock(Quantity<ItemId> quantity);
+    ResultStatus addItemToStock(Quantity<String> quantity);
 
     Collection<StockItem> getStocks();
 
-    ResultStatus putToBasket(String customerId, Quantity<ItemId> quantity);
+    ResultStatus putToBasket(String customerId, Quantity<String> quantity);
 
-    List<PricedPosition> getBasketContent(String customerId);
+    List<Position> getBasketContent(String customerId);
 
-    void removeFromBasket(String customerId, Quantity<ItemId> quantity);
+    void removeFromBasket(String customerId, Quantity<String> quantity);
 
     ResultStatus addCustomer(CustomerInfo customer);
 
     ResultStatus submitOrder(String customerId);
-
-    List<Order> getOrders(String customerId);
 
     List<PickingOrder> getPickingOrders(String customerId);
 }

@@ -7,10 +7,8 @@ import java.util.Objects;
 @Embeddable
 public class Money {
     public static final Money ZERO = Money.of(0d, Currencies.EUR);
-
     @Basic
     private Double amount;
-
     @Basic
     private String currency;
 
@@ -21,8 +19,16 @@ public class Money {
         return money;
     }
 
+    public Double getAmount() {
+        return amount;
+    }
+
     public void setAmount(Double amount) {
         this.amount = amount;
+    }
+
+    public String getCurrency() {
+        return currency;
     }
 
     public void setCurrency(String currency) {

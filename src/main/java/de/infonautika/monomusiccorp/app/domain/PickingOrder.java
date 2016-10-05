@@ -17,7 +17,7 @@ public class PickingOrder implements HasPositions {
     private PickingStatus status;
 
     @OneToOne
-    @PrimaryKeyJoinColumn
+    @JoinColumn(name = "order_id")
     private Order order;
 
     public void setOrder(Order order) {
