@@ -1,23 +1,63 @@
 package de.infonautika.monomusiccorp.app.controller;
 
-import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.domain.Product;
+import de.infonautika.monomusiccorp.app.repository.ProductLookup;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collection;
+import java.util.List;
+import java.util.function.Supplier;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
-@RequestMapping("/catalog")
+@RequestMapping("/api/catalog")
 public class CatalogController {
 
     @Autowired
-    private BusinessProcess businessProcess;
+    private ProductLookup productLookup;
 
-    @RequestMapping("/products")
-    public Collection<Product> products() {
-        return businessProcess.getAllProducts();
+    @GetMapping
+    public Resources<ProductResource> products() {
+
+        List<ProductResource> productResources = new ProductResourceAssembler(getClass()).toResources(productLookup.findAll());
+        productResources.forEach(this::addSelfLink);
+
+        Resources<ProductResource> resources = new Resources<>(productResources);
+        resources.add(linkTo(CatalogController.class).withSelfRel());
+
+        return resources;
     }
 
+    private void addSelfLink(ProductResource productResource) {
+        productResource.add(
+                linkTo(methodOn(getClass()).getProduct(productResource.getProductId())).withSelfRel());
+    }
+
+    @RequestMapping("/{id}")
+    @GetMapping
+    public HttpEntity<ProductResource> getProduct(@PathVariable(value="id") String productId) {
+        return productLookup.findOne(productId)
+                .map(this::toResource)
+                .map(ResponseEntity::ok)
+                .orElseGet(notFound());
+    }
+
+    private Supplier<ResponseEntity<ProductResource>> notFound() {
+        return () -> new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    private ProductResource toResource(Product product) {
+        ProductResource productResource = new ProductResourceAssembler(getClass()).toResource(product);
+        addSelfLink(productResource);
+        return productResource;
+    }
 }
