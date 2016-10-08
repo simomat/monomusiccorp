@@ -20,7 +20,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/catalog")
-public class CatalogController {
+public class CatalogController implements SelfLinkSupplier {
 
     @Autowired
     private ProductLookup productLookup;
@@ -29,15 +29,16 @@ public class CatalogController {
     public Resources<ProductResource> products() {
 
         List<ProductResource> productResources = new ProductResourceAssembler(getClass()).toResources(productLookup.findAll());
-        productResources.forEach(this::addSelfLink);
+        productResources.forEach(this::addProductSelfLink);
 
         Resources<ProductResource> resources = new Resources<>(productResources);
-        resources.add(linkTo(CatalogController.class).withSelfRel());
+        addSelfLink(resources);
 
         return resources;
     }
 
-    private void addSelfLink(ProductResource productResource) {
+
+    private void addProductSelfLink(ProductResource productResource) {
         productResource.add(
                 linkTo(methodOn(getClass()).getProduct(productResource.getProductId())).withSelfRel());
     }
@@ -57,7 +58,7 @@ public class CatalogController {
 
     private ProductResource toResource(Product product) {
         ProductResource productResource = new ProductResourceAssembler(getClass()).toResource(product);
-        addSelfLink(productResource);
+        addProductSelfLink(productResource);
         return productResource;
     }
 }

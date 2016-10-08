@@ -1,16 +1,13 @@
 package de.infonautika.monomusiccorp.app.business;
 
-import de.infonautika.monomusiccorp.app.domain.*;
+import de.infonautika.monomusiccorp.app.domain.PickingOrder;
+import de.infonautika.monomusiccorp.app.domain.Position;
 
-import java.util.Collection;
 import java.util.List;
 
 public interface BusinessProcess {
-    Collection<Product> getAllProducts();
 
     ResultStatus addItemToStock(Quantity<String> quantity);
-
-    Collection<StockItem> getStocks();
 
     ResultStatus putToBasket(String customerId, Quantity<String> quantity);
 

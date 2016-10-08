@@ -11,7 +11,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 import static de.infonautika.monomusiccorp.app.business.ResultStatus.isOk;
@@ -56,11 +59,6 @@ public class BusinessProcessImpl implements BusinessProcess {
     private InvoiceDelivery invoiceDelivery;
 
     @Override
-    public Collection<Product> getAllProducts() {
-        return productLookup.findAll();
-    }
-
-    @Override
     public ResultStatus addItemToStock(Quantity<String> quantity) {
         return findStockItem(quantity.getItem())
                 .map(stockItem -> {
@@ -98,11 +96,6 @@ public class BusinessProcessImpl implements BusinessProcess {
     private Optional<Product> getProduct(String productId) {
         return productLookup.findOne(productId);
    }
-
-    @Override
-    public Collection<StockItem> getStocks() {
-        return stockItemRepository.findAll();
-    }
 
     @Override
     public ResultStatus putToBasket(String customerId, Quantity<String> quantity) {

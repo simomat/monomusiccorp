@@ -2,21 +2,25 @@ package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.Quantity;
-import de.infonautika.monomusiccorp.app.domain.StockItem;
+import de.infonautika.monomusiccorp.app.repository.StockItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.hateoas.Resources;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
+import java.util.List;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
-@RequestMapping("/stock")
-public class StockController {
+@RequestMapping("/api/stock")
+public class StockController implements SelfLinkSupplier{
 
     @Autowired
     private BusinessProcess businessProcess;
+
+    @Autowired
+    private StockItemRepository stockItemRepository;
 
     @RequestMapping("/newstockitem")
     @PostMapping
@@ -24,10 +28,21 @@ public class StockController {
         businessProcess.addItemToStock(supply);
     }
 
-    @RequestMapping("/stock")
-    public Collection<StockItem> getStockItems() {
-        return businessProcess.getStocks();
+    @RequestMapping
+    @GetMapping
+    public Resources<StockItemResource> getStockItems() {
+        List<StockItemResource> stockItems = new StockItemResourceAssembler(getClass()).toResources(stockItemRepository.findAll());
 
+        stockItems.forEach(stockItemResource -> {
+            stockItemResource.add(
+                    linkTo(methodOn(CatalogController.class).getProduct(stockItemResource.getProductId()))
+                            .withRel("prod"));
+        });
+
+        Resources<StockItemResource> stockItemResources = new Resources<>(stockItems);
+        addSelfLink(stockItemResources);
+
+        return stockItemResources;
     }
 
 

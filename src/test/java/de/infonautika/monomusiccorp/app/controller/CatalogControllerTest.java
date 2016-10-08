@@ -13,6 +13,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.HTTP_LOCALHOST;
+import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.LINKS_SELF_HREF;
 import static de.infonautika.monomusiccorp.app.domain.Currencies.EUR;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -23,8 +25,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(MockitoJUnitRunner.class)
 public class CatalogControllerTest {
 
-    public static final String HTTP_LOCALHOST = "http://localhost";
-    public static final String LINKS_SELF_HREF = ".links[?(@.rel=='self')].href";
     private MockMvc mvc;
 
     @InjectMocks
