@@ -1,6 +1,7 @@
 package de.infonautika.monomusiccorp.app;
 
 
+import de.infonautika.monomusiccorp.app.business.ApplicationState;
 import de.infonautika.monomusiccorp.app.security.DefaultUsers;
 import de.infonautika.monomusiccorp.app.security.ModifiableUserDetailsManager;
 import de.infonautika.monomusiccorp.app.security.ModifiableUserDetailsManagerImpl;
@@ -11,6 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaBaseConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +23,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.transaction.jta.JtaTransactionManager;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
@@ -49,6 +53,16 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
         properties.put("eclipselink.weaving", "false");
         properties.put("eclipselink.logging.level", "FINE");
         return properties;
+    }
+
+    @Bean
+    public ServletContextInitializer getServletContextInitializer() {
+        return servletContext -> {
+            WebApplicationContext ctx = WebApplicationContextUtils.getWebApplicationContext(servletContext);
+            ApplicationState applicationState = (ApplicationState) ctx.getBean("applicationState");
+            applicationState.dropState();
+            applicationState.createState();
+        };
     }
 
     @Configuration
