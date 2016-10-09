@@ -424,7 +424,7 @@ public class BusinessProcessImplTest {
                 //noinspection OptionalGetWithoutIsPresent
                 return stream(stockItems)
                         .filter(stockItem -> stockItem.getProduct().getId().equals(id))
-                        .findFirst().get();
+                        .findFirst();
 
             }).when(stockItemRepository).findByProductId(anyString());
 

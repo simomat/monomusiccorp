@@ -8,4 +8,8 @@ public class ControllerConstants {
     public static String linkOfRel(String rel) {
         return ".links[?(@.rel=='" + rel + "')].href";
     }
+
+    public static String linkOfSelf() {
+        return LINKS_SELF_HREF;
+    }
 }

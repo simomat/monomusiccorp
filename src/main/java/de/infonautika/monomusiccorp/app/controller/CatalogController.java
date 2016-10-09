@@ -5,7 +5,6 @@ import de.infonautika.monomusiccorp.app.repository.ProductLookup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.function.Supplier;
 
+import static de.infonautika.monomusiccorp.app.controller.Results.notFound;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
@@ -50,10 +49,6 @@ public class CatalogController implements SelfLinkSupplier {
                 .map(this::toResource)
                 .map(ResponseEntity::ok)
                 .orElseGet(notFound());
-    }
-
-    private Supplier<ResponseEntity<ProductResource>> notFound() {
-        return () -> new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     private ProductResource toResource(Product product) {

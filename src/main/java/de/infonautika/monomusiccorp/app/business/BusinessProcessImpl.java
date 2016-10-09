@@ -60,7 +60,7 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     @Override
     public ResultStatus addItemToStock(Quantity<String> quantity) {
-        return findStockItem(quantity.getItem())
+        return stockItemRepository.findByProductId(quantity.getItem())
                 .map(stockItem -> {
                     updateStockItemQuantity(stockItem, quantity);
                     return ResultStatus.OK;
@@ -89,10 +89,6 @@ public class BusinessProcessImpl implements BusinessProcess {
         stockItemRepository.save(stockItem);
     }
 
-    private Optional<StockItem> findStockItem(String productId) {
-        return Optional.ofNullable(stockItemRepository.findByProductId(productId));
-    }
-
     private Optional<Product> getProduct(String productId) {
         return productLookup.findOne(productId);
    }
@@ -104,16 +100,20 @@ public class BusinessProcessImpl implements BusinessProcess {
                     withCustomer(
                         customerId,
                         customer -> {
-                            ShoppingBasket shoppingBasket = customer.getShoppingBasket();
-                            shoppingBasket.put(product, quantity.getQuantity());
-                            shoppingBasketRepository.save(shoppingBasket);
-                            logger.debug("customer {} put {} to basket", customer.getUsername(), quantity);
+                            updateShoppingBasket(customer, product, quantity);
                             return ResultStatus.OK;
                         }))
                 .orElseGet(() -> {
                     logger.debug("user id {} tried to put {} to basket, but product does not exist", customerId, quantity.getItem());
                     return ResultStatus.NOT_EXISTENT;
                 });
+    }
+
+    private void updateShoppingBasket(Customer customer, Product product, Quantity<String> quantity) {
+        ShoppingBasket shoppingBasket = customer.getShoppingBasket();
+        shoppingBasket.put(product, quantity.getQuantity());
+        shoppingBasketRepository.save(shoppingBasket);
+        logger.debug("customer {} put {} to basket", customer.getUsername(), quantity);
     }
 
     @Override

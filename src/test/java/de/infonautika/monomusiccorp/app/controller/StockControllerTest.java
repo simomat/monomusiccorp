@@ -15,10 +15,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.Optional;
+
 import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.*;
 import static de.infonautika.monomusiccorp.app.domain.Currencies.EUR;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -55,27 +58,56 @@ public class StockControllerTest {
 
     @Test
     public void getStockHasSelfLink() throws Exception {
-        Product product = Product.create("A", "T", Money.of(33d, EUR));
-        product.setId("33");
-        StockItem stockItem = StockItem.of(product, 40L);
+        StockItem stockItem = StockItem.of(product("33", "A", "T", Money.of(33d, EUR)), 40L);
         doReturn(singletonList(stockItem)).when(stockItemRepository).findAll();
 
         mvc.perform(get("/api/stock").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$" + LINKS_SELF_HREF).value(HTTP_LOCALHOST + "/api/stock"));
+                .andExpect(jsonPath("$" + linkOfSelf()).value(HTTP_LOCALHOST + "/api/stock"));
     }
-
 
     @Test
     public void stockItemsHaveProductLink() throws Exception {
-        Product product = Product.create("A", "T", Money.of(33d, EUR));
-        product.setId("33");
-        StockItem stockItem = StockItem.of(product, 40L);
+        StockItem stockItem = StockItem.of(product("33", "A", "T", Money.of(33d, EUR)), 40L);
         doReturn(singletonList(stockItem)).when(stockItemRepository).findAll();
 
         mvc.perform(get("/api/stock").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$..content[0]" + linkOfRel("prod")).value(HTTP_LOCALHOST + "/api/catalog/33"));
+                .andExpect(jsonPath("$..content[0]" + linkOfRel("product")).value(HTTP_LOCALHOST + "/api/catalog/33"));
+    }
+
+    @Test
+    public void stockItemsHaveSelfLink() throws Exception {
+        StockItem stockItem = StockItem.of(product("33", "A", "T", Money.of(33d, EUR)), 40L);
+        doReturn(singletonList(stockItem)).when(stockItemRepository).findAll();
+
+        mvc.perform(get("/api/stock").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$..content[0]" + linkOfSelf()).value(HTTP_LOCALHOST + "/api/stock/item/33"));
+    }
+
+    @Test
+    public void invalidGetStockItemReturns404() throws Exception {
+        doReturn(Optional.empty()).when(stockItemRepository).findByProductId(anyString());
+
+        mvc.perform(get("/api/stock/item/55").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void singleStockItemHasSelfLink() throws Exception {
+        StockItem stockItem = StockItem.of(product("33", "A", "T", Money.of(33d, EUR)), 40L);
+        doReturn(Optional.of(stockItem)).when(stockItemRepository).findByProductId(anyString());
+
+        mvc.perform(get("/api/stock/item/33").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$" + linkOfSelf()).value(HTTP_LOCALHOST + "/api/stock/item/33"));
+    }
+
+    private static Product product(String id, String artist, String title, Money price) {
+        Product product = Product.create(artist, title, price);
+        product.setId(id);
+        return product;
     }
 
 }
