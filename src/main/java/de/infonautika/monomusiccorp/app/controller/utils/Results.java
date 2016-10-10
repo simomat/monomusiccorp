@@ -1,4 +1,4 @@
-package de.infonautika.monomusiccorp.app.controller;
+package de.infonautika.monomusiccorp.app.controller.utils;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

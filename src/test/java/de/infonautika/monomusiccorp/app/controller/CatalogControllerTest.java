@@ -1,5 +1,6 @@
 package de.infonautika.monomusiccorp.app.controller;
 
+import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedLinkBuilder;
 import de.infonautika.monomusiccorp.app.domain.Money;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.repository.ProductLookup;
@@ -9,18 +10,21 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
-import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.HTTP_LOCALHOST;
-import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.linkOfSelf;
+import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.*;
 import static de.infonautika.monomusiccorp.app.domain.Currencies.EUR;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -36,10 +40,23 @@ public class CatalogControllerTest {
     @Mock
     public ProductLookup productLookup;
 
+    @Mock
+    public AuthorizedLinkBuilder authorizedLinkBuilder;
+
     @Before
     public void setUp() throws Exception {
         mvc = MockMvcBuilders.standaloneSetup(catalogController)
                     .build();
+        initLinkBuilderAlwaysAuthorized();
+    }
+
+    private void initLinkBuilderAlwaysAuthorized() {
+        doAnswer(invocation -> {
+            Object invocationArgument = invocation.getArgument(0);
+            Consumer<ControllerLinkBuilder> linkConsumer = invocation.getArgument(1);
+            linkConsumer.accept(ControllerLinkBuilder.linkTo(invocationArgument));
+            return null;
+        }).when(authorizedLinkBuilder).withRightsOn(any(), any());
     }
 
     @Test
@@ -80,6 +97,17 @@ public class CatalogControllerTest {
         mvc.perform(get("/api/catalog/22").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$" + linkOfSelf()).value(HTTP_LOCALHOST + "/api/catalog/22"));
+    }
+
+    @Test
+    public void singleProductHasAddToStockLink() throws Exception {
+        Product product = Product.create("A", "T", Money.of(22D, EUR));
+        product.setId("22");
+        doReturn(Optional.of(product)).when(productLookup).findOne(anyString());
+
+        mvc.perform(get("/api/catalog/22").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$" + linkOfRel("stock")).exists());
     }
 
 }

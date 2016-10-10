@@ -5,7 +5,6 @@ import de.infonautika.monomusiccorp.app.business.ApplicationState;
 import de.infonautika.monomusiccorp.app.security.DefaultUsers;
 import de.infonautika.monomusiccorp.app.security.ModifiableUserDetailsManager;
 import de.infonautika.monomusiccorp.app.security.ModifiableUserDetailsManagerImpl;
-import de.infonautika.monomusiccorp.app.security.UserRole;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,8 +18,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.orm.jpa.vendor.AbstractJpaVendorAdapter;
 import org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.transaction.jta.JtaTransactionManager;
 import org.springframework.web.context.WebApplicationContext;
@@ -66,11 +65,12 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
     }
 
     @Configuration
-    @EnableWebSecurity
+    @EnableGlobalMethodSecurity(securedEnabled = true)
     @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
     protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
 
         private ModifiableUserDetailsManager userDetailsManager;
+
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
@@ -78,11 +78,8 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
             http
                     .csrf().disable()
                     .authorizeRequests()
-                        .antMatchers("/").authenticated()
-                        .antMatchers("/info/**").authenticated()
-                        .antMatchers("/shopping/**").hasRole(UserRole.CUSTOMER)
-                        .antMatchers("/app/**").hasRole(UserRole.ADMIN)
-                        .antMatchers("/stock/**").hasRole(UserRole.STOCK_MANAGER).and()
+                    .anyRequest().authenticated()
+                    .and()
                         .httpBasic().realmName(realmName).and()
                     .logout()
                         .logoutSuccessHandler((request, response, authentication) -> {
