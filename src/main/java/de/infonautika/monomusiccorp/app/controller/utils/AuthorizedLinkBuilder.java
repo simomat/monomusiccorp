@@ -12,6 +12,7 @@ import org.springframework.util.Assert;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static java.util.Arrays.stream;
 
@@ -21,21 +22,37 @@ public class AuthorizedLinkBuilder {
     @Autowired
     private AuthenticationFacade authenticationFacade;
 
+    private Function<Object, ControllerLinkBuilder> linkBuilder = ControllerLinkBuilder::linkTo;
+
+    void setLinkBuilder(Function<Object, ControllerLinkBuilder> linkBuilder) {
+        this.linkBuilder = linkBuilder;
+    }
+
     public void withRightsOn(Object invocationValue, Consumer<ControllerLinkBuilder> linkConsumer) {
         Assert.isInstanceOf(DummyInvocationUtils.LastInvocationAware.class, invocationValue);
 
         Method method = ((DummyInvocationUtils.LastInvocationAware) invocationValue).getLastInvocation().getMethod();
 
-        Optional.ofNullable(method.getAnnotation(Secured.class))
-                .filter(secured -> currentUserHasRole(secured.value()))
-                .ifPresent(secured -> linkConsumer.accept(ControllerLinkBuilder.linkTo(invocationValue)));
+        if (accessGranted(method)) {
+            linkConsumer.accept(linkBuilder.apply(invocationValue));
+        }
+    }
+
+    private Boolean accessGranted(Method method) {
+        return getAllowedRoles(method)
+                .map(this::currentUserHasRole)
+                .orElse(true);
+    }
+
+    private Optional<String[]> getAllowedRoles(Method method) {
+        return Optional.ofNullable(method.getAnnotation(Secured.class))
+                .map(secured -> Optional.of(secured.value()))
+                .orElse(Optional.empty());
     }
 
     private boolean currentUserHasRole(String[] roles) {
-        return authenticationFacade.getAuthentication()
-                .map(authentication -> authentication.getAuthorities().stream()
-                    .anyMatch(grantedAuthority -> hasAnyRole(grantedAuthority, roles)))
-                .orElse(false);
+        return authenticationFacade.getCurrentUserAuthorities().stream()
+                    .anyMatch(grantedAuthority -> hasAnyRole(grantedAuthority, roles));
     }
 
     private boolean hasAnyRole(GrantedAuthority authority, String[] roles) {
