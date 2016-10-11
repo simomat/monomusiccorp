@@ -2,6 +2,8 @@ package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.CustomerInfo;
+import de.infonautika.monomusiccorp.app.controller.resources.CustomerResource;
+import de.infonautika.monomusiccorp.app.controller.resources.CustomerResourceAssembler;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
 import de.infonautika.monomusiccorp.app.domain.ConflictException;
 import de.infonautika.monomusiccorp.app.domain.Customer;

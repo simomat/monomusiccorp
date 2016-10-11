@@ -1,5 +1,7 @@
 package de.infonautika.monomusiccorp.app.controller;
 
+import de.infonautika.monomusiccorp.app.controller.resources.ProductResource;
+import de.infonautika.monomusiccorp.app.controller.resources.ProductResourceAssembler;
 import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedLinkBuilder;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
 import de.infonautika.monomusiccorp.app.domain.Product;

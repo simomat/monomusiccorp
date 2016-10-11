@@ -2,6 +2,8 @@ package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.Quantity;
+import de.infonautika.monomusiccorp.app.controller.resources.StockItemResource;
+import de.infonautika.monomusiccorp.app.controller.resources.StockItemResourceAssembler;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
 import de.infonautika.monomusiccorp.app.domain.StockItem;
 import de.infonautika.monomusiccorp.app.repository.StockItemRepository;

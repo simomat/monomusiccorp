@@ -1,4 +1,4 @@
-package de.infonautika.monomusiccorp.app.controller;
+package de.infonautika.monomusiccorp.app.controller.resources;
 
 import de.infonautika.monomusiccorp.app.domain.Address;
 import org.springframework.hateoas.ResourceSupport;
