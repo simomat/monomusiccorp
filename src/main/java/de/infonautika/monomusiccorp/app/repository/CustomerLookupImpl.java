@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -47,5 +48,10 @@ public class CustomerLookupImpl implements CustomerLookup {
     @Override
     public void tryWithCustomer(String customerId, Consumer<Customer> consumer) {
         getCustomer(customerId).ifPresent(consumer);
+    }
+
+    @Override
+    public List<Customer> findAll() {
+        return customerRepository.findAll();
     }
 }

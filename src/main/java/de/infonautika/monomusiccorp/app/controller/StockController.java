@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static de.infonautika.monomusiccorp.app.controller.utils.Results.noContent;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.notFound;
 import static de.infonautika.monomusiccorp.app.security.UserRole.ADMIN;
 import static de.infonautika.monomusiccorp.app.security.UserRole.STOCK_MANAGER;
@@ -34,7 +35,7 @@ public class StockController implements SelfLinkSupplier {
     @Secured({STOCK_MANAGER, ADMIN})
     public ResponseEntity<Void> addItemsToStock(@PathVariable("id") String productId, @RequestBody StockItemResource hasQuantity) {
         businessProcess.addItemToStock(Quantity.of(productId, hasQuantity.getQuantity()));
-        return ResponseEntity.noContent().build();
+        return noContent();
     }
 
     @RequestMapping(value = "/item/{id}", method = RequestMethod.GET)

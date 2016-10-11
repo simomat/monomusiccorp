@@ -17,7 +17,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static de.infonautika.monomusiccorp.app.business.ResultStatus.isOk;
 import static de.infonautika.streamjoin.Join.join;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -136,16 +135,10 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     @Override
-    public ResultStatus addCustomer(CustomerInfo customer) {
-        ResultStatus resultStatus = securityService.addUser(customer);
-        if (!isOk(resultStatus)) {
-            logger.info("failed to add customer {}", customer.getUsername());
-            return resultStatus;
-        }
-
-        createCustomer(customer);
+    public void addCustomer(CustomerInfo customer) throws ConflictException {
+        securityService.addUser(customer);
+        createCustomerAndSave(customer);
         logger.info("customer {} added", customer.getUsername());
-        return ResultStatus.OK;
     }
 
     @Override
@@ -256,7 +249,7 @@ public class BusinessProcessImpl implements BusinessProcess {
         return pricedPosition;
     }
 
-    private void createCustomer(CustomerInfo customerInfo) {
+    private void createCustomerAndSave(CustomerInfo customerInfo) {
         Customer customer = new Customer();
         customer.setUsername(customerInfo.getUsername());
         customer.setAddress(new Address(customerInfo.getAddress()));

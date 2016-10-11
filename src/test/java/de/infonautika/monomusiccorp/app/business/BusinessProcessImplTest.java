@@ -82,32 +82,22 @@ public class BusinessProcessImplTest {
     @Captor
     private ArgumentCaptor<Order> orderCaptor;
 
-    @Test
+    @Test(expected = ConflictException.class)
     public void addCustomerWithExistingNameFails() throws Exception {
-        when(securityService.addUser(any())).thenReturn(ResultStatus.USER_EXISTS);
-
-        ResultStatus status = businessProcess.addCustomer(hans);
-
-        assertThat(status, is(ResultStatus.USER_EXISTS));
-    }
-
-    @Test
-    public void addCustomerReturnsOk() throws Exception {
-        when(securityService.addUser(any())).thenReturn(ResultStatus.OK);
-
-        ResultStatus status = businessProcess.addCustomer(hans);
-
-        assertThat(status, is(ResultStatus.OK));
-    }
-
-    @Test
-    public void addCustomerCreatesCustomer() throws Exception {
-        when(securityService.addUser(any())).thenReturn(ResultStatus.OK);
+        doThrow(ConflictException.class).when(securityService).addUser(any());
 
         businessProcess.addCustomer(hans);
+    }
 
+    @Test
+    public void addCustomerSavesUserAndCustomer() throws Exception {
+        businessProcess.addCustomer(hans);
+
+        verify(securityService).addUser(hans);
         verify(customerLookup).save(argThat(customer -> customer.getUsername().equals("hans")));
     }
+
+    // TODO: 11.10.16 add test for atomicity
 
     @Test
     public void addStockItemWithoutProductFails() throws Exception {

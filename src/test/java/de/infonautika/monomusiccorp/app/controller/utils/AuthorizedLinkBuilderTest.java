@@ -52,7 +52,7 @@ public class AuthorizedLinkBuilderTest {
 
         ControllerLinkBuilderConsumer controllerLinkBuilderConsumer = new ControllerLinkBuilderConsumer();
         authorizedLinkBuilder.withRightsOn(
-                methodOn(DummyController.class).restrictedDummyMethodNoRoles(),
+                methodOn(DummyController.class).restrictedDummyMethod(),
                 controllerLinkBuilderConsumer
         );
 
@@ -65,7 +65,7 @@ public class AuthorizedLinkBuilderTest {
 
         ControllerLinkBuilderConsumer controllerLinkBuilderConsumer = new ControllerLinkBuilderConsumer();
         authorizedLinkBuilder.withRightsOn(
-                methodOn(DummyController.class).restrictedDummyMethodNoRoles(),
+                methodOn(DummyController.class).restrictedDummyMethod(),
                 controllerLinkBuilderConsumer
         );
 
@@ -97,7 +97,7 @@ public class AuthorizedLinkBuilderTest {
         }
 
         @Secured({"ROLE_TESTER", "ROLE_ADMIN"})
-        public Number restrictedDummyMethodNoRoles() {
+        public Number restrictedDummyMethod() {
             return null;
         }
     }

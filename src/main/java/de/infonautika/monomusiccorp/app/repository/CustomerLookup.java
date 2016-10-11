@@ -2,6 +2,7 @@ package de.infonautika.monomusiccorp.app.repository;
 
 import de.infonautika.monomusiccorp.app.domain.Customer;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -17,4 +18,7 @@ public interface CustomerLookup {
     <T> T withCustomer(String customerId, Function<Customer, T> customerMapper, Supplier<T> elseGet);
 
     void tryWithCustomer(String customerId, Consumer<Customer> consumer);
+
+    List<Customer> findAll();
 }
+

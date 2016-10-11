@@ -1,6 +1,7 @@
 package de.infonautika.monomusiccorp.app.business;
 
 
+import de.infonautika.monomusiccorp.app.domain.ConflictException;
 import de.infonautika.monomusiccorp.app.domain.Money;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.domain.StockItem;
@@ -43,7 +44,6 @@ public class ApplicationState {
         productRepo.deleteAll();
         cusomerRepository.deleteAll();
         securityService.deleteUsers();
-        securityService.addUser(DefaultUsers.ADMIN);
     }
 
     public void createState() {
@@ -65,8 +65,11 @@ public class ApplicationState {
         productRepo.save(asList(products));
         stockItemRepository.save(asList(stocks));
 
-
-        businessProcess.addCustomer(new CustomerInfo("hans", "hans", "Hechtstr. 21, 01097 Dresden"));
-
+        try {
+            securityService.addUser(DefaultUsers.ADMIN);
+            businessProcess.addCustomer(new CustomerInfo("hans", "hans", "Hechtstr. 21, 01097 Dresden"));
+        } catch (ConflictException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

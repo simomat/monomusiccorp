@@ -1,5 +1,6 @@
 package de.infonautika.monomusiccorp.app.business;
 
+import de.infonautika.monomusiccorp.app.domain.ConflictException;
 import de.infonautika.monomusiccorp.app.domain.PickingOrder;
 import de.infonautika.monomusiccorp.app.domain.Position;
 
@@ -15,7 +16,7 @@ public interface BusinessProcess {
 
     void removeFromBasket(String customerId, Quantity<String> quantity);
 
-    ResultStatus addCustomer(CustomerInfo customer);
+    void addCustomer(CustomerInfo customer) throws ConflictException;
 
     ResultStatus submitOrder(String customerId);
 
