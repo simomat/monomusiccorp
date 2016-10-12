@@ -1,6 +1,7 @@
 package de.infonautika.monomusiccorp.app.controller;
 
-import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedLinkBuilder;
+import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedInvocationFilter;
+import de.infonautika.monomusiccorp.app.controller.utils.Invocation;
 import de.infonautika.monomusiccorp.app.domain.Money;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.repository.ProductLookup;
@@ -41,7 +42,7 @@ public class CatalogControllerTest {
     public ProductLookup productLookup;
 
     @Mock
-    public AuthorizedLinkBuilder authorizedLinkBuilder;
+    public AuthorizedInvocationFilter authorizedInvocationFilter;
 
     @Before
     public void setUp() throws Exception {
@@ -52,11 +53,11 @@ public class CatalogControllerTest {
 
     private void initLinkBuilderAlwaysAuthorized() {
         doAnswer(invocation -> {
-            DummyInvocationUtils.LastInvocationAware invocationArgument = invocation.getArgument(0);
-            Consumer<DummyInvocationUtils.LastInvocationAware> invocationAwareConsumer = invocation.getArgument(1);
+            Invocation invocationArgument = invocation.getArgument(0);
+            Consumer<Invocation> invocationAwareConsumer = invocation.getArgument(1);
             invocationAwareConsumer.accept(invocationArgument);
             return null;
-        }).when(authorizedLinkBuilder).withRightsOn(any(), any());
+        }).when(authorizedInvocationFilter).withRightsOn(any(), any());
     }
 
     @Test
@@ -76,8 +77,8 @@ public class CatalogControllerTest {
 
         mvc.perform(get("/api/catalog").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$" + linkOfSelf()).value(HTTP_LOCALHOST + "/api/catalog"))
-                .andExpect(jsonPath("$..content[0]" + linkOfSelf()).value(HTTP_LOCALHOST + "/api/catalog/22"));
+                .andExpect(jsonPath("$" + linkOfSelf()).value("/api/catalog"))
+                .andExpect(jsonPath("$..content[0]" + linkOfSelf()).value("/api/catalog/22"));
     }
 
     @Test
@@ -96,7 +97,7 @@ public class CatalogControllerTest {
 
         mvc.perform(get("/api/catalog/22").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$" + linkOfSelf()).value(HTTP_LOCALHOST + "/api/catalog/22"));
+                .andExpect(jsonPath("$" + linkOfSelf()).value("/api/catalog/22"));
     }
 
     @Test

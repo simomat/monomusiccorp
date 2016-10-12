@@ -4,6 +4,7 @@ import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.CustomerInfo;
 import de.infonautika.monomusiccorp.app.controller.resources.CustomerResource;
 import de.infonautika.monomusiccorp.app.controller.resources.CustomerResourceAssembler;
+import de.infonautika.monomusiccorp.app.controller.utils.Invocation;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
 import de.infonautika.monomusiccorp.app.domain.ConflictException;
 import de.infonautika.monomusiccorp.app.domain.Customer;
@@ -18,10 +19,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.*;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.*;
 import static de.infonautika.monomusiccorp.app.security.UserRole.ADMIN;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/customer")
@@ -71,12 +71,12 @@ public class CustomerController implements SelfLinkSupplier {
 
     private CustomerResource toCustomerResource(Customer customer) {
         CustomerResource customerResource = new CustomerResourceAssembler(getClass()).toResource(customer);
-        customerResource.add(linkTo(methodOn(getClass()).getCustomer(customer.getUsername())).withSelfRel());
+        customerResource.add(createSelfLink(Invocation.invocationOf(Invocation.methodOn(getClass()).getCustomer(customer.getUsername()))));
         return customerResource;
     }
 
     private void addCustomerLink(CustomerResource customerResource) {
-        customerResource.add(linkTo(methodOn(getClass()).getCustomer(customerResource.getUsername())).withSelfRel());
+        customerResource.add(createSelfLink(Invocation.invocationOf(Invocation.methodOn(getClass()).getCustomer(customerResource.getUsername()))));
     }
 
 

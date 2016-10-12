@@ -2,7 +2,8 @@ package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.controller.resources.ProductResource;
 import de.infonautika.monomusiccorp.app.controller.resources.ProductResourceAssembler;
-import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedLinkBuilder;
+import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedInvocationFilter;
+import de.infonautika.monomusiccorp.app.controller.utils.Invocation;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.repository.ProductLookup;
@@ -17,10 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.addLink;
+import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.*;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.notFound;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/catalog")
@@ -30,7 +29,7 @@ public class CatalogController implements SelfLinkSupplier {
     private ProductLookup productLookup;
 
     @Autowired
-    private AuthorizedLinkBuilder authorizedLinkBuilder;
+    private AuthorizedInvocationFilter authorizedInvocationFilter;
 
     @GetMapping
     public Resources<ProductResource> products() {
@@ -47,7 +46,7 @@ public class CatalogController implements SelfLinkSupplier {
 
     private void addProductSelfLink(ProductResource productResource) {
         productResource.add(
-                linkTo(methodOn(getClass()).getProduct(productResource.getProductId())).withSelfRel());
+                createSelfLink(Invocation.invocationOf(Invocation.methodOn(getClass()).getProduct(productResource.getProductId()))));
     }
 
     @RequestMapping("/{id}")
@@ -71,9 +70,8 @@ public class CatalogController implements SelfLinkSupplier {
     }
 
     private void addStockAddItemLink(ProductResource productResource) {
-        authorizedLinkBuilder.withRightsOn(
-                methodOn(StockController.class).addItemsToStock(productResource.getProductId(), null),
+        authorizedInvocationFilter.withRightsOn(
+                Invocation.invocationOf(Invocation.methodOn(StockController.class).addItemsToStock(productResource.getProductId(), null)),
                 addLink(productResource, "stock"));
     }
-
 }

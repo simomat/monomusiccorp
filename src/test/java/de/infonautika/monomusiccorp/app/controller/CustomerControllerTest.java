@@ -17,7 +17,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Optional;
 
-import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.HTTP_LOCALHOST;
 import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.linkOfSelf;
 import static java.util.Collections.emptyList;
 import static org.mockito.ArgumentMatchers.any;
@@ -58,7 +57,7 @@ public class CustomerControllerTest {
 
         mvc.perform(get("/api/customer").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$" + linkOfSelf()).value(HTTP_LOCALHOST + "/api/customer"));
+                .andExpect(jsonPath("$" + linkOfSelf()).value("/api/customer"));
     }
 
     @Test
@@ -70,7 +69,7 @@ public class CustomerControllerTest {
 
         mvc.perform(get("/api/customer/hans").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$" + linkOfSelf()).value(HTTP_LOCALHOST + "/api/customer/hans"));
+                .andExpect(jsonPath("$" + linkOfSelf()).value("/api/customer/hans"));
     }
 
     @Test

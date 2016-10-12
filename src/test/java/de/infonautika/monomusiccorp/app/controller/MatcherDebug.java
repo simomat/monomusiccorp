@@ -4,20 +4,28 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultMatcher;
 
-public class MatcherDebug {
-    public static ResultMatcher debug(ResultMatcher matcher) {
-        return new ResultMatcher() {
-            @Override
-            public void match(MvcResult result) throws Exception {
-                MockHttpServletResponse response = result.getResponse();
-                print("status: " + response.getStatus());
-                print("content: " + response.getContentAsString());
-                matcher.match(result);
-            }
+import java.io.UnsupportedEncodingException;
 
-            private void print(String string) {
-                System.out.println(string);
-            }
+public class MatcherDebug {
+
+    public static ResultMatcher debug(ResultMatcher matcher) {
+        return result -> {
+            output(result);
+            matcher.match(result);
         };
+    }
+
+    public static ResultMatcher debug() {
+        return result -> output(result);
+    }
+
+    private static void print(String string) {
+        System.out.println(string);
+    }
+
+    private static void output(MvcResult result) throws UnsupportedEncodingException {
+        MockHttpServletResponse response = result.getResponse();
+        print("status: " + response.getStatus());
+        print("content: " + response.getContentAsString());
     }
 }

@@ -64,7 +64,7 @@ public class StockControllerTest {
 
         mvc.perform(get("/api/stock").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$" + linkOfSelf()).value(HTTP_LOCALHOST + "/api/stock"));
+                .andExpect(jsonPath("$" + linkOfSelf()).value("/api/stock"));
     }
 
     @Test
@@ -74,7 +74,7 @@ public class StockControllerTest {
 
         mvc.perform(get("/api/stock").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$..content[0]" + linkOfRel("product")).value(HTTP_LOCALHOST + "/api/catalog/33"));
+                .andExpect(jsonPath("$..content[0]" + linkOfRel("product")).value("/api/catalog/33"));
     }
 
     @Test
@@ -84,7 +84,7 @@ public class StockControllerTest {
 
         mvc.perform(get("/api/stock").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$..content[0]" + linkOfSelf()).value(HTTP_LOCALHOST + "/api/stock/item/33"));
+                .andExpect(jsonPath("$..content[0]" + linkOfSelf()).value("/api/stock/item/33"));
     }
 
     @Test
@@ -102,7 +102,7 @@ public class StockControllerTest {
 
         mvc.perform(get("/api/stock/item/33").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$" + linkOfSelf()).value(HTTP_LOCALHOST + "/api/stock/item/33"));
+                .andExpect(jsonPath("$" + linkOfSelf()).value("/api/stock/item/33"));
     }
 
     @Test
