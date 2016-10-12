@@ -3,7 +3,7 @@ package de.infonautika.monomusiccorp.app.controller;
 import de.infonautika.monomusiccorp.app.controller.resources.ProductResource;
 import de.infonautika.monomusiccorp.app.controller.resources.ProductResourceAssembler;
 import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedInvocationFilter;
-import de.infonautika.monomusiccorp.app.controller.utils.Invocation;
+import de.infonautika.monomusiccorp.app.controller.utils.LinkSupport;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.repository.ProductLookup;
@@ -20,6 +20,7 @@ import java.util.List;
 
 import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.*;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.notFound;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
 
 @RestController
 @RequestMapping("/api/catalog")
@@ -46,7 +47,7 @@ public class CatalogController implements SelfLinkSupplier {
 
     private void addProductSelfLink(ProductResource productResource) {
         productResource.add(
-                createSelfLink(Invocation.invocationOf(Invocation.methodOn(getClass()).getProduct(productResource.getProductId()))));
+                createSelfLink(invocationOf(methodOn(getClass()).getProduct(productResource.getProductId()))));
     }
 
     @RequestMapping("/{id}")
@@ -71,7 +72,7 @@ public class CatalogController implements SelfLinkSupplier {
 
     private void addStockAddItemLink(ProductResource productResource) {
         authorizedInvocationFilter.withRightsOn(
-                Invocation.invocationOf(Invocation.methodOn(StockController.class).addItemsToStock(productResource.getProductId(), null)),
+                LinkSupport.invocationOf(methodOn(StockController.class).addItemsToStock(productResource.getProductId(), null)),
                 addLink(productResource, "stock"));
     }
 }

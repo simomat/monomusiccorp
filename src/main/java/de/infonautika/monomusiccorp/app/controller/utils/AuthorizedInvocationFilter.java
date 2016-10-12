@@ -1,5 +1,6 @@
 package de.infonautika.monomusiccorp.app.controller.utils;
 
+import de.infonautika.monomusiccorp.app.controller.utils.links.Invocation;
 import de.infonautika.monomusiccorp.app.security.AuthenticationFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -19,7 +20,7 @@ public class AuthorizedInvocationFilter {
     private AuthenticationFacade authenticationFacade;
 
     public void withRightsOn(Invocation invocation, Consumer<Invocation> linkConsumer) {
-        if (accessGranted(invocation.getLastInvocation().getMethod())) {
+        if (accessGranted(invocation.getMethod())) {
             linkConsumer.accept(invocation);
         }
     }

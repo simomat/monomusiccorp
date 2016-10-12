@@ -4,7 +4,6 @@ import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.Quantity;
 import de.infonautika.monomusiccorp.app.controller.resources.StockItemResource;
 import de.infonautika.monomusiccorp.app.controller.resources.StockItemResourceAssembler;
-import de.infonautika.monomusiccorp.app.controller.utils.Invocation;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
 import de.infonautika.monomusiccorp.app.domain.StockItem;
 import de.infonautika.monomusiccorp.app.repository.StockItemRepository;
@@ -20,6 +19,7 @@ import java.util.List;
 import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.*;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.noContent;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.notFound;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
 import static de.infonautika.monomusiccorp.app.security.UserRole.ADMIN;
 import static de.infonautika.monomusiccorp.app.security.UserRole.STOCK_MANAGER;
 
@@ -76,13 +76,13 @@ public class StockController implements SelfLinkSupplier {
     }
 
     private void addLinkToStockItem(StockItemResource stockItemResource) {
-        stockItemResource.add(createSelfLink(Invocation.invocationOf(Invocation.methodOn(getClass()).getStockItem(stockItemResource.getProductId()))));
+        stockItemResource.add(createSelfLink(invocationOf(methodOn(getClass()).getStockItem(stockItemResource.getProductId()))));
     }
 
     private void addLinkToProduct(StockItemResource stockItemResource) {
         stockItemResource.add(
                 createLink(
                     "product",
-                    Invocation.invocationOf(Invocation.methodOn(CatalogController.class).getProduct(stockItemResource.getProductId()))));
+                    invocationOf(methodOn(CatalogController.class).getProduct(stockItemResource.getProductId()))));
     }
 }
