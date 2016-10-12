@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.addLink;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.notFound;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
@@ -72,7 +73,7 @@ public class CatalogController implements SelfLinkSupplier {
     private void addStockAddItemLink(ProductResource productResource) {
         authorizedLinkBuilder.withRightsOn(
                 methodOn(StockController.class).addItemsToStock(productResource.getProductId(), null),
-                linkBuilder -> productResource.add(linkBuilder.withRel("stock")));
+                addLink(productResource, "stock"));
     }
 
 }

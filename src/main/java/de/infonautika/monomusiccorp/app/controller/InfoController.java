@@ -3,17 +3,12 @@ package de.infonautika.monomusiccorp.app.controller;
 import de.infonautika.monomusiccorp.app.controller.resources.MessageResource;
 import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedLinkBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
 import org.springframework.hateoas.TemplateVariable;
-import org.springframework.hateoas.TemplateVariables;
-import org.springframework.hateoas.UriTemplate;
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.lang.reflect.Method;
-
+import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.addLink;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
@@ -41,7 +36,7 @@ public class InfoController {
     private void addStockControllerLinks(MessageResource messageResource) {
         authorizedLinkBuilder.withRightsOn(
                 methodOn(StockController.class).getStockItems(),
-                linkBuilder -> messageResource.add(linkBuilder.withRel("stock"))
+                addLink(messageResource, "stock")
         );
 
 //        authorizedLinkBuilder.withRightsOn(
@@ -62,19 +57,19 @@ public class InfoController {
     private void addCustomerControllerLinks(MessageResource messageResource) {
         authorizedLinkBuilder.withRightsOn(
                 methodOn(CustomerController.class).getCustomers(),
-                linkBuilder -> messageResource.add(linkBuilder.withRel("customers"))
+                addLink(messageResource, "customers")
         );
 
         authorizedLinkBuilder.withRightsOn(
                 methodOn(CustomerController.class).register(null),
-                linkBuilder -> messageResource.add(linkBuilder.withRel("register"))
+                addLink(messageResource, "register")
         );
     }
 
     private void addCatalogControllerLinks(MessageResource messageResource) {
         authorizedLinkBuilder.withRightsOn(
                 methodOn(CatalogController.class).products(),
-                linkBuilder -> messageResource.add(linkBuilder.withRel("products"))
+                addLink(messageResource, "products")
         );
     }
 

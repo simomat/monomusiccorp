@@ -10,7 +10,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.hateoas.core.DummyInvocationUtils;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -52,9 +52,9 @@ public class CatalogControllerTest {
 
     private void initLinkBuilderAlwaysAuthorized() {
         doAnswer(invocation -> {
-            Object invocationArgument = invocation.getArgument(0);
-            Consumer<ControllerLinkBuilder> linkConsumer = invocation.getArgument(1);
-            linkConsumer.accept(ControllerLinkBuilder.linkTo(invocationArgument));
+            DummyInvocationUtils.LastInvocationAware invocationArgument = invocation.getArgument(0);
+            Consumer<DummyInvocationUtils.LastInvocationAware> invocationAwareConsumer = invocation.getArgument(1);
+            invocationAwareConsumer.accept(invocationArgument);
             return null;
         }).when(authorizedLinkBuilder).withRightsOn(any(), any());
     }

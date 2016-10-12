@@ -1,13 +1,12 @@
 package de.infonautika.monomusiccorp.app.controller.utils;
 
 import de.infonautika.monomusiccorp.app.security.AuthenticationFacade;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.hateoas.core.DummyInvocationUtils;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -28,11 +27,6 @@ public class AuthorizedLinkBuilderTest {
 
     @Mock
     public AuthenticationFacade authenticationFacade;
-
-    @Before
-    public void setUp() throws Exception {
-        authorizedLinkBuilder.setLinkBuilder(object -> null);
-    }
 
     @Test
     public void linkUnrestrictedMethodsAlwaysGranted() throws Exception {
@@ -79,10 +73,10 @@ public class AuthorizedLinkBuilderTest {
             .when(authenticationFacade).getCurrentUserAuthorities();
     }
 
-    private class ControllerLinkBuilderConsumer implements Consumer<ControllerLinkBuilder> {
+    private class ControllerLinkBuilderConsumer implements Consumer<DummyInvocationUtils.LastInvocationAware> {
         private boolean wasCalled = false;
         @Override
-        public void accept(ControllerLinkBuilder controllerLinkBuilder) {
+        public void accept(DummyInvocationUtils.LastInvocationAware invocationAware) {
             wasCalled = true;
         }
     }

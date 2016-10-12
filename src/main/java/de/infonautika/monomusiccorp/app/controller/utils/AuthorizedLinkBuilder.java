@@ -3,7 +3,6 @@ package de.infonautika.monomusiccorp.app.controller.utils;
 import de.infonautika.monomusiccorp.app.security.AuthenticationFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.core.DummyInvocationUtils;
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
@@ -12,7 +11,6 @@ import org.springframework.util.Assert;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static java.util.Arrays.stream;
 
@@ -22,19 +20,13 @@ public class AuthorizedLinkBuilder {
     @Autowired
     private AuthenticationFacade authenticationFacade;
 
-    private Function<Object, ControllerLinkBuilder> linkBuilder = ControllerLinkBuilder::linkTo;
-
-    void setLinkBuilder(Function<Object, ControllerLinkBuilder> linkBuilder) {
-        this.linkBuilder = linkBuilder;
-    }
-
-    public void withRightsOn(Object invocationValue, Consumer<ControllerLinkBuilder> linkConsumer) {
+    public void withRightsOn(Object invocationValue, Consumer<DummyInvocationUtils.LastInvocationAware> linkConsumer) {
         Assert.isInstanceOf(DummyInvocationUtils.LastInvocationAware.class, invocationValue);
 
-        Method method = ((DummyInvocationUtils.LastInvocationAware) invocationValue).getLastInvocation().getMethod();
+        DummyInvocationUtils.LastInvocationAware invocation = (DummyInvocationUtils.LastInvocationAware) invocationValue;
 
-        if (accessGranted(method)) {
-            linkConsumer.accept(linkBuilder.apply(invocationValue));
+        if (accessGranted(invocation.getLastInvocation().getMethod())) {
+            linkConsumer.accept(invocation);
         }
     }
 
