@@ -1,5 +1,6 @@
 package de.infonautika.monomusiccorp.app.controller.utils;
 
+import de.infonautika.monomusiccorp.app.controller.utils.links.Invocation;
 import de.infonautika.monomusiccorp.app.security.AuthenticationFacade;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,8 +13,8 @@ import org.springframework.security.core.GrantedAuthority;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static de.infonautika.monomusiccorp.app.controller.utils.Invocation.invocationOf;
-import static de.infonautika.monomusiccorp.app.controller.utils.Invocation.methodOn;
+import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.invocationOf;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
 import static java.util.Arrays.stream;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;

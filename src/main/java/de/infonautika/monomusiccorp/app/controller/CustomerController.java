@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.createSelfLink;
 import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.invocationOf;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.*;
 import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkCreator.createLink;
 import static de.infonautika.monomusiccorp.app.security.UserRole.ADMIN;
 
 @RestController
@@ -60,7 +60,7 @@ public class CustomerController implements SelfLinkSupplier {
     }
 
     @RequestMapping(value = "/{userName}", method = RequestMethod.GET)
-    public HttpEntity<CustomerResource> getCustomer(@PathVariable String userName) {
+    public HttpEntity<CustomerResource> getCustomer(@PathVariable("userName") String userName) {
         return authenticationFacade.getCurrentUserName()
                 .filter(name -> name.equals(userName))
                 .map(name -> customerLookup.getCustomer(userName)
@@ -72,12 +72,12 @@ public class CustomerController implements SelfLinkSupplier {
 
     private CustomerResource toCustomerResource(Customer customer) {
         CustomerResource customerResource = new CustomerResourceAssembler(getClass()).toResource(customer);
-        customerResource.add(createSelfLink(invocationOf(methodOn(getClass()).getCustomer(customer.getUsername()))));
+        customerResource.add(createLink(invocationOf(methodOn(getClass()).getCustomer(customer.getUsername()))).withRelSelf());
         return customerResource;
     }
 
     private void addCustomerLink(CustomerResource customerResource) {
-        customerResource.add(createSelfLink(invocationOf(methodOn(getClass()).getCustomer(customerResource.getUsername()))));
+        customerResource.add(createLink(invocationOf(methodOn(getClass()).getCustomer(customerResource.getUsername()))).withRelSelf());
     }
 
 

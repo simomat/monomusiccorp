@@ -7,7 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.*;
+import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.addLink;
+import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.invocationOf;
 import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
 
 @RestController
@@ -39,8 +40,8 @@ public class InfoController {
         );
 
         authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(StockController.class).getStockItem("id")),
-                addTemplateLink(messageResource, "stockitem", pathTemplateVariable("id"))
+                invocationOf(methodOn(StockController.class).getStockItem(null)),
+                addLink(messageResource, "stockitem")
         );
     }
 
@@ -56,8 +57,8 @@ public class InfoController {
         );
 
         authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(CustomerController.class).getCustomer("userName")),
-                addTemplateLink(messageResource, "customer", pathTemplateVariable("userName"))
+                invocationOf(methodOn(CustomerController.class).getCustomer(null)),
+                addLink(messageResource, "customer")
         );
     }
 
@@ -68,8 +69,8 @@ public class InfoController {
         );
 
         authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(CatalogController.class).getProduct("id")),
-                addTemplateLink(messageResource, "product", pathTemplateVariable("id"))
+                invocationOf(methodOn(CatalogController.class).getProduct(null)),
+                addLink(messageResource, "product")
         );
     }
 

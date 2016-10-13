@@ -1,7 +1,7 @@
 package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedInvocationFilter;
-import de.infonautika.monomusiccorp.app.controller.utils.Invocation;
+import de.infonautika.monomusiccorp.app.controller.utils.links.Invocation;
 import de.infonautika.monomusiccorp.app.domain.Money;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.repository.ProductLookup;
@@ -11,7 +11,6 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.hateoas.core.DummyInvocationUtils;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -19,7 +18,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.*;
+import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.linkOfRel;
+import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.linkOfSelf;
 import static de.infonautika.monomusiccorp.app.domain.Currencies.EUR;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;

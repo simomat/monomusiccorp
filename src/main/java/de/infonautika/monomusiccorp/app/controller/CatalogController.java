@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.*;
+import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.addLink;
+import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.invocationOf;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.notFound;
 import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkCreator.createLink;
 
 @RestController
 @RequestMapping("/api/catalog")
@@ -47,7 +49,7 @@ public class CatalogController implements SelfLinkSupplier {
 
     private void addProductSelfLink(ProductResource productResource) {
         productResource.add(
-                createSelfLink(invocationOf(methodOn(getClass()).getProduct(productResource.getProductId()))));
+                createLink(invocationOf(methodOn(getClass()).getProduct(productResource.getProductId()))).withRelSelf());
     }
 
     @RequestMapping("/{id}")

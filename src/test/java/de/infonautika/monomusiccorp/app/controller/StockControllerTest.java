@@ -18,7 +18,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Optional;
 
-import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.*;
+import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.linkOfRel;
+import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.linkOfSelf;
 import static de.infonautika.monomusiccorp.app.domain.Currencies.EUR;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
