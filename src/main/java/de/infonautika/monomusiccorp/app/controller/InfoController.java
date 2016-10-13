@@ -16,7 +16,7 @@ import static de.infonautika.monomusiccorp.app.controller.utils.links.Invocation
 public class InfoController {
 
     @Autowired
-    AuthorizedInvocationFilter authorizedInvocationFilter;
+    private AuthorizedInvocationFilter authorizedInvocationFilter;
 
     @RequestMapping(method = RequestMethod.GET)
     public MessageResource getApi() {
@@ -42,6 +42,11 @@ public class InfoController {
         authorizedInvocationFilter.withRightsOn(
                 invocationOf(methodOn(StockController.class).getStockItem(null)),
                 addLink(messageResource, "stockitem")
+        );
+
+        authorizedInvocationFilter.withRightsOn(
+                invocationOf(methodOn(StockController.class).addItemsToStock(null, null)),
+                addLink(messageResource, "addstockitem")
         );
     }
 
