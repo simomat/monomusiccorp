@@ -14,11 +14,7 @@ public class Results {
         return () -> new ResponseEntity<>(HttpStatus.FORBIDDEN);
     }
 
-    public static ResponseEntity<Void> noContent() {
+    public static ResponseEntity<?> noContent() {
         return ResponseEntity.noContent().build();
-    }
-
-    public static ResponseEntity<String> conflict(String message) {
-        return new ResponseEntity<>(message, HttpStatus.CONFLICT);
     }
 }

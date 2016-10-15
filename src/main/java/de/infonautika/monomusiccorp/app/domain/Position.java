@@ -54,4 +54,6 @@ public class Position {
     public static Position of(Product product, long quantity) {
         return new Position(product, quantity);
     }
+
+
 }

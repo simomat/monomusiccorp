@@ -63,4 +63,12 @@ public class PricedPosition {
                 ", quantity=" + quantity +
                 '}';
     }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public Long getQuantity() {
+        return quantity;
+    }
 }

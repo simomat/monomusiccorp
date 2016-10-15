@@ -36,7 +36,7 @@ public class StockController implements SelfLinkSupplier {
 
     @RequestMapping(value = "/item/{id}", method = RequestMethod.POST)
     @Secured({STOCK_MANAGER, ADMIN})
-    public ResponseEntity<Void> addItemsToStock(@PathVariable("id") String productId, @RequestBody StockItemResource hasQuantity) {
+    public ResponseEntity addItemsToStock(@PathVariable("id") String productId, @RequestBody StockItemResource hasQuantity) {
         businessProcess.addItemToStock(Quantity.of(productId, hasQuantity.getQuantity()));
         return noContent();
     }

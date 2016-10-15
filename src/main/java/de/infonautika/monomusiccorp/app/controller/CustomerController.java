@@ -5,7 +5,6 @@ import de.infonautika.monomusiccorp.app.business.CustomerInfo;
 import de.infonautika.monomusiccorp.app.controller.resources.CustomerResource;
 import de.infonautika.monomusiccorp.app.controller.resources.CustomerResourceAssembler;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
-import de.infonautika.monomusiccorp.app.domain.ConflictException;
 import de.infonautika.monomusiccorp.app.domain.Customer;
 import de.infonautika.monomusiccorp.app.repository.CustomerLookup;
 import de.infonautika.monomusiccorp.app.security.AuthenticationFacade;
@@ -51,11 +50,7 @@ public class CustomerController implements SelfLinkSupplier {
 
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<?> register(@RequestBody CustomerInfo customer){
-        try {
-            businessProcess.addCustomer(customer);
-        } catch (ConflictException e) {
-            return conflict(e.getMessage());
-        }
+        businessProcess.addCustomer(customer);
         return noContent();
     }
 

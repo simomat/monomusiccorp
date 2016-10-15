@@ -1,7 +1,7 @@
 package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
-import de.infonautika.monomusiccorp.app.domain.ConflictException;
+import de.infonautika.monomusiccorp.app.business.errors.ConflictException;
 import de.infonautika.monomusiccorp.app.domain.Customer;
 import de.infonautika.monomusiccorp.app.repository.CustomerLookup;
 import de.infonautika.monomusiccorp.app.security.AuthenticationFacade;

@@ -1,6 +1,6 @@
 package de.infonautika.monomusiccorp.app.security;
 
-import de.infonautika.monomusiccorp.app.domain.ConflictException;
+import de.infonautika.monomusiccorp.app.business.errors.ConflictException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,7 @@ public class SecurityServiceImpl implements SecurityService{
     private ModifiableUserDetailsManager userDetailsManager;
 
     @Override
-    public void addUser(UserDetails userDetails) throws ConflictException {
+    public void addUser(UserDetails userDetails) {
         if (userDetailsManager.userExists(userDetails.getUsername())) {
             logger.info("failed to add user {} because user exists", userDetails.getUsername());
             throw new ConflictException("user '" + userDetails.getUsername() + "' already exists");

@@ -1,6 +1,8 @@
 package de.infonautika.monomusiccorp.app.business;
 
 import de.infonautika.monomusiccorp.app.BiDescribingMatcherBuilder;
+import de.infonautika.monomusiccorp.app.business.errors.ConflictException;
+import de.infonautika.monomusiccorp.app.business.errors.DoesNotExistException;
 import de.infonautika.monomusiccorp.app.domain.*;
 import de.infonautika.monomusiccorp.app.repository.*;
 import de.infonautika.monomusiccorp.app.security.SecurityService;
@@ -143,22 +145,9 @@ public class BusinessProcessImplTest {
                 .andBuild();
     }
 
-    @Test
+    @Test(expected = DoesNotExistException.class)
     public void putNonExistingItemToBasketFails() throws Exception {
-        ResultStatus actual = businessProcess.putToBasket("", Quantity.of("5", 3L));
-
-        assertThat(actual, is(ResultStatus.NOT_EXISTENT));
-    }
-
-    @Test
-    public void putToBasketReturnsOk() throws Exception {
-        stateSetup()
-                .havingProducts(productOf("5"))
-                .emptyShoppingBasket();
-
-        ResultStatus actual = businessProcess.putToBasket("", Quantity.of("5", 3L));
-
-        assertThat(actual, is(ResultStatus.OK));
+        businessProcess.putToBasket("", "5", 3L);
     }
 
     @Test
@@ -168,7 +157,7 @@ public class BusinessProcessImplTest {
                 .havingProducts(product)
                 .emptyShoppingBasket();
 
-        businessProcess.putToBasket("", Quantity.of("4", 3L));
+        businessProcess.putToBasket("", "4", 3L);
 
         verify(shoppingBasketRepository).save(shoppingBasketCaptor.capture());
         assertThat(shoppingBasketCaptor.getValue(), containsPosition(Position.of(product, 3L)));
@@ -239,20 +228,18 @@ public class BusinessProcessImplTest {
         stateSetup()
                 .havingShoppingBasket(position);
 
-        businessProcess.removeFromBasket("", Quantity.of("5", 3L));
+        businessProcess.removeFromBasket("", "5", 3L);
 
         verify(shoppingBasketRepository).save(shoppingBasketCaptor.capture());
         assertThat(shoppingBasketCaptor.getValue(), containsPosition(Position.of(productOf("5"), 1L)));
     }
 
-    @Test
+    @Test(expected = DoesNotExistException.class)
     public void submitOrderWithEmptyBasketFails() throws Exception {
         stateSetup()
                 .emptyShoppingBasket();
 
-        ResultStatus status = businessProcess.submitOrder("3");
-
-        assertThat(status, is(ResultStatus.NOT_EXISTENT));
+        businessProcess.submitOrder("3");
     }
 
     @Test
@@ -263,9 +250,7 @@ public class BusinessProcessImplTest {
                 .havingProducts(product)
                 .havingShoppingBasket(Position.of(product, 4L));
 
-        ResultStatus status = businessProcess.submitOrder("3");
-
-        assertThat(status, is(ResultStatus.OK));
+        businessProcess.submitOrder("3");
 
         verify(orderRepository).save(orderCaptor.capture());
         assertThat(orderCaptor.getValue(), containsPricedPosition(PricedPosition.of(product, 4L, price)));

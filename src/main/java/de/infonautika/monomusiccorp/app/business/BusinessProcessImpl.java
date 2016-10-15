@@ -1,6 +1,7 @@
 package de.infonautika.monomusiccorp.app.business;
 
 
+import de.infonautika.monomusiccorp.app.business.errors.DoesNotExistException;
 import de.infonautika.monomusiccorp.app.domain.*;
 import de.infonautika.monomusiccorp.app.repository.*;
 import de.infonautika.monomusiccorp.app.security.SecurityService;
@@ -15,8 +16,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static de.infonautika.monomusiccorp.app.util.Functional.ifPresent;
 import static de.infonautika.streamjoin.Join.join;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -28,7 +31,6 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     @Autowired
     private StockItemRepository stockItemRepository;
-
 
     @Autowired
     private OrderRepository orderRepository;
@@ -93,24 +95,21 @@ public class BusinessProcessImpl implements BusinessProcess {
    }
 
     @Override
-    public ResultStatus putToBasket(String customerId, Quantity<String> quantity) {
-        return productLookup.findOne(quantity.getItem())
-                .map(product ->
-                    withCustomer(
-                        customerId,
-                        customer -> {
-                            updateShoppingBasket(customer, product, quantity);
-                            return ResultStatus.OK;
-                        }))
-                .orElseGet(() -> {
-                    logger.debug("user id {} tried to put {} to basket, but product does not exist", customerId, quantity.getItem());
-                    return ResultStatus.NOT_EXISTENT;
-                });
+    public void putToBasket(String customerId, String productId, Long quantity) {
+        ifPresent(productLookup.findOne(productId),
+                product ->
+                    customerLookup.tryWithCustomer(
+                            customerId,
+                            customer -> updateShoppingBasket(customer, product, quantity)))
+        .orElseThrow(() -> {
+                logger.debug("user id {} tried to put {} to basket, but product does not exist", customerId, productId);
+                return new DoesNotExistException("product " + productId);
+            });
     }
 
-    private void updateShoppingBasket(Customer customer, Product product, Quantity<String> quantity) {
+    private void updateShoppingBasket(Customer customer, Product product, Long quantity) {
         ShoppingBasket shoppingBasket = customer.getShoppingBasket();
-        shoppingBasket.put(product, quantity.getQuantity());
+        shoppingBasket.put(product, quantity);
         shoppingBasketRepository.save(shoppingBasket);
         logger.debug("customer {} put {} to basket", customer.getUsername(), quantity);
     }
@@ -124,40 +123,38 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     @Override
-    public void removeFromBasket(String customerId, Quantity<String> quantity) {
+    public void removeFromBasket(String customerId, String productId, Long quantity) {
         customerLookup.tryWithCustomer(customerId,
                 customer -> {
                     ShoppingBasket shoppingBasket = customer.getShoppingBasket();
-                    shoppingBasket.remove(quantity.getItem(), quantity.getQuantity());
+                    shoppingBasket.remove(productId, quantity);
                     shoppingBasketRepository.save(shoppingBasket);
-                    logger.debug("customer {} removed {} of {} from basket", customer.getUsername(), quantity.getQuantity(), quantity.getItem());
+                    logger.debug("customer {} removed {} of {} from basket", customer.getUsername(), quantity, productId);
                 });
     }
 
     @Override
-    public void addCustomer(CustomerInfo customer) throws ConflictException {
+    public void addCustomer(CustomerInfo customer)  {
         securityService.addUser(customer);
         createCustomerAndSave(customer);
         logger.info("customer {} added", customer.getUsername());
     }
 
     @Override
-    public ResultStatus submitOrder(String customerId) {
-        return withCustomer(
-                customerId,
-                customer -> {
-                    ShoppingBasket shoppingBasket = customer.getShoppingBasket();
-                    if (shoppingBasket.isEmpty()) {
-                        logger.debug("rejected submit an order with empty basket for customer {}", customer.getUsername());
-                        return ResultStatus.NOT_EXISTENT;
-                    }
+    public void submitOrder(String customerId) {
+        withCustomer(
+            customerId,
+            customer -> {
+                ShoppingBasket shoppingBasket = customer.getShoppingBasket();
+                if (shoppingBasket.isEmpty()) {
+                    logger.debug("rejected submit an order with empty basket for customer {}", customer.getUsername());
+                    throw new DoesNotExistException("no items in basket");
+                }
 
-                    Order order = createAndSaveOrder(customer, shoppingBasket);
-                    clearShoppingBasket(customer);
-                    processNewOrder(order);
-
-                    return ResultStatus.OK;
-                });
+                Order order = createAndSaveOrder(customer, shoppingBasket);
+                clearShoppingBasket(customer);
+                processNewOrder(order);
+            });
     }
 
     private Order createAndSaveOrder(Customer customer, ShoppingBasket shoppingBasket) {
@@ -182,13 +179,8 @@ public class BusinessProcessImpl implements BusinessProcess {
         customerLookup.save(customer);
     }
 
-    private ResultStatus withCustomer(String customerId, Function<Customer, ResultStatus> customerMapper) {
-        return customerLookup.withCustomer(customerId, customerMapper, () -> ResultStatus.NO_CUSTOMER);
-    }
-
-    @Override
-    public List<PickingOrder> getPickingOrders(String customerId) {
-        return pickingOrderRepository.findByOrderCustomerId(customerId);
+    private void withCustomer(String customerId, Consumer<Customer> customerMapper) {
+        customerLookup.tryWithCustomer(customerId, customerMapper);
     }
 
     private void processBilling(Order order) {
