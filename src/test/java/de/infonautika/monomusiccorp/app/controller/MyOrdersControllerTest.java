@@ -21,7 +21,6 @@ import java.util.function.Consumer;
 
 import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.linkOfRel;
 import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.linkOfSelf;
-import static de.infonautika.monomusiccorp.app.controller.MatcherDebug.debug;
 import static de.infonautika.monomusiccorp.app.domain.Currencies.EUR;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
@@ -87,7 +86,7 @@ public class MyOrdersControllerTest {
 
         mvc.perform(get("/api/orders").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(debug(jsonPath("$..positions[0]" + linkOfRel("product")).value("/api/catalog/5")))
+                .andExpect(jsonPath("$..positions[0]" + linkOfRel("product")).value("/api/catalog/5"))
                 .andExpect(jsonPath("$" + linkOfSelf()).value("/api/orders"));
     }
 }
