@@ -1,17 +1,12 @@
 package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
-import de.infonautika.monomusiccorp.app.business.errors.DoesNotExistException;
 import de.infonautika.monomusiccorp.app.business.errors.ForbiddenException;
-import de.infonautika.monomusiccorp.app.controller.resources.OrderStatusResourceAssembler;
 import de.infonautika.monomusiccorp.app.controller.resources.PositionResource;
 import de.infonautika.monomusiccorp.app.controller.resources.PositionResourceAssembler;
-import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedInvocationFilter;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
-import de.infonautika.monomusiccorp.app.domain.PickingOrder;
 import de.infonautika.monomusiccorp.app.domain.Position;
-import de.infonautika.monomusiccorp.app.intermediate.CustomerProvider;
-import de.infonautika.monomusiccorp.app.repository.PickingOrderRepository;
+import de.infonautika.monomusiccorp.app.intermediate.CurrentCustomerProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.ResponseEntity;
@@ -21,28 +16,21 @@ import java.util.List;
 import java.util.function.Function;
 
 import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.invocationOf;
-import static de.infonautika.monomusiccorp.app.controller.utils.Results.*;
+import static de.infonautika.monomusiccorp.app.controller.utils.Results.noContent;
 import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
 import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkCreator.createLink;
-import static org.springframework.http.ResponseEntity.ok;
 
 @RestController
-@RequestMapping("/api/shopping")
+@RequestMapping("/api/basket")
 public class ShoppingController implements SelfLinkSupplier {
 
     @Autowired
     private BusinessProcess businessProcess;
 
     @Autowired
-    private CustomerProvider customerProvider;
+    private CurrentCustomerProvider currentCustomerProvider;
 
-    @Autowired
-    private AuthorizedInvocationFilter authorizedInvocationFilter;
-
-    @Autowired
-    private PickingOrderRepository pickingOrderRepository;
-
-    @RequestMapping(value = "/basket/{productId}", method = RequestMethod.POST)
+    @RequestMapping(value = "/{productId}", method = RequestMethod.POST)
     public ResponseEntity putToBasket(@PathVariable("productId") String productId, @RequestParam("quantity") Long quantity) {
         return withCustomerId(
             consumerId -> {
@@ -51,7 +39,7 @@ public class ShoppingController implements SelfLinkSupplier {
             });
     }
 
-    @RequestMapping(value = "/basket/{productId}", method = RequestMethod.DELETE)
+    @RequestMapping(value = "/{productId}", method = RequestMethod.DELETE)
     public ResponseEntity removeFromBasket(@PathVariable("productId") String productId, @RequestParam("quantity") Long quantity) {
         return withCustomerId(id -> {
             businessProcess.removeFromBasket(id, productId, quantity);
@@ -59,7 +47,7 @@ public class ShoppingController implements SelfLinkSupplier {
         });
     }
 
-    @RequestMapping(value = "/basket", method = RequestMethod.GET)
+    @RequestMapping(method = RequestMethod.GET)
     public Resources<PositionResource> getBasket() {
         return withCustomerId(
                 id -> {
@@ -76,7 +64,7 @@ public class ShoppingController implements SelfLinkSupplier {
                 });
     }
 
-    @RequestMapping(value = "/submitorder", method = RequestMethod.GET)
+    @RequestMapping(value = "/submit", method = RequestMethod.GET)
     public ResponseEntity submitOrder() {
         return withCustomerId(id -> {
             businessProcess.submitOrder(id);
@@ -84,30 +72,8 @@ public class ShoppingController implements SelfLinkSupplier {
         });
     }
 
-    @RequestMapping(value = "/orders", method = RequestMethod.GET)
-    public Resources<OrderStatusResource> getOrders() {
-        return withCustomerId(
-            id -> {
-                List<PickingOrder> pickingOrders = pickingOrderRepository.findByOrderCustomerId(id);
-                List<OrderStatusResource> orderStatusResources = new OrderStatusResourceAssembler(getClass()).toResources(pickingOrders);
-                orderStatusResources.forEach(this::addProductLinks);
-
-                Resources<OrderStatusResource> resources = new Resources<>(orderStatusResources);
-                resources.add(createLink(invocationOf(methodOn(getClass()).getOrders())).withRelSelf());
-                return resources;
-            });
-}
-
-    private void addProductLinks(OrderStatusResource orderStatusResource) {
-        orderStatusResource.getPositions().forEach(pricedPositionResource ->
-            authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(CatalogController.class).getProduct(pricedPositionResource.getProductId())),
-                invocation -> pricedPositionResource.add(createLink(invocation).withRel("product")))
-        );
-    }
-
     private <T> T withCustomerId(Function<String, T> function) {
-        return customerProvider.getCustomerId()
+        return currentCustomerProvider.getCustomerId()
                 .map(function)
                 .orElseThrow(() -> new ForbiddenException("invalid customer"));
     }

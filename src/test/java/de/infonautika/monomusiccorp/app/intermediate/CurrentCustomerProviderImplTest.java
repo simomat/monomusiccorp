@@ -16,10 +16,10 @@ import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class CustomerProviderImplTest {
+public class CurrentCustomerProviderImplTest {
 
     @InjectMocks
-    public CustomerProviderImpl customerProvider;
+    public CurrentCustomerProviderImpl customerProvider;
 
     @Mock
     public AuthenticationFacade authenticationFacade;

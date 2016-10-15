@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
-public class CustomerProviderImpl implements CustomerProvider {
+public class CurrentCustomerProviderImpl implements CurrentCustomerProvider {
 
     @Autowired
     private AuthenticationFacade authenticationFacade;
