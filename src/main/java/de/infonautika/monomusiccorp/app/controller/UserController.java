@@ -8,9 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.invocationOf;
-import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
-import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkCreator.createLink;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.linkOn;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.methodOn;
+
 
 @RestController
 @RequestMapping("/api/user")
@@ -24,7 +24,7 @@ public class UserController {
         return authenticationFacade.getCurrentUserName()
                 .map(username -> {
                     Resource<String> resource = new Resource<>(username);
-                    resource.add(createLink(invocationOf(methodOn(getClass()).currentUser())).withRelSelf());
+                    resource.add(linkOn(methodOn(getClass()).currentUser()).withRelSelf());
 
                     return ResponseEntity.ok(resource);
                 })

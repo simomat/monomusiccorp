@@ -8,8 +8,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.addLink;
-import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.invocationOf;
-import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.methodOn;
 
 @RestController
 @RequestMapping("/api")
@@ -35,46 +34,46 @@ public class InfoController {
 
     private void addStockControllerLinks(MessageResource messageResource) {
         authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(StockController.class).getStockItems()),
+                methodOn(StockController.class).getStockItems(),
                 addLink(messageResource, "stock")
         );
 
         authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(StockController.class).getStockItem(null)),
+                methodOn(StockController.class).getStockItem(null),
                 addLink(messageResource, "stockitem")
         );
 
         authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(StockController.class).addItemsToStock(null, null)),
+                methodOn(StockController.class).addItemsToStock(null, null),
                 addLink(messageResource, "addstockitem")
         );
     }
 
     private void addCustomerControllerLinks(MessageResource messageResource) {
         authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(CustomerController.class).getCustomers()),
+                methodOn(CustomerController.class).getCustomers(),
                 addLink(messageResource, "customers")
         );
 
         authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(CustomerController.class).register(null)),
+                methodOn(CustomerController.class).register(null),
                 addLink(messageResource, "register")
         );
 
         authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(CustomerController.class).getCustomer(null)),
+                methodOn(CustomerController.class).getCustomer(null),
                 addLink(messageResource, "customer")
         );
     }
 
     private void addCatalogControllerLinks(MessageResource messageResource) {
         authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(CatalogController.class).products()),
+                methodOn(CatalogController.class).products(),
                 addLink(messageResource, "products")
         );
 
         authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(CatalogController.class).getProduct(null)),
+                methodOn(CatalogController.class).getProduct(null),
                 addLink(messageResource, "product")
         );
     }

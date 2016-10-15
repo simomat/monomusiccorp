@@ -16,11 +16,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.invocationOf;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.noContent;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.notFound;
-import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
-import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkCreator.createLink;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.linkOn;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.methodOn;
 import static de.infonautika.monomusiccorp.app.security.UserRole.ADMIN;
 import static de.infonautika.monomusiccorp.app.security.UserRole.STOCK_MANAGER;
 
@@ -78,13 +77,12 @@ public class StockController implements SelfLinkSupplier {
 
     private void addLinkToStockItem(StockItemResource stockItemResource) {
         stockItemResource.add(
-                createLink(invocationOf(methodOn(getClass()).getStockItem(stockItemResource.getProductId())))
+                linkOn(methodOn(getClass()).getStockItem(stockItemResource.getProductId()))
                         .withRelSelf());
     }
 
     private void addLinkToProduct(StockItemResource stockItemResource) {
         stockItemResource.add(
-                createLink(
-                    invocationOf(methodOn(CatalogController.class).getProduct(stockItemResource.getProductId()))).withRel("product"));
+                linkOn(methodOn(CatalogController.class).getProduct(stockItemResource.getProductId())).withRel("product"));
     }
 }

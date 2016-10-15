@@ -3,7 +3,6 @@ package de.infonautika.monomusiccorp.app.controller;
 import de.infonautika.monomusiccorp.app.controller.resources.ProductResource;
 import de.infonautika.monomusiccorp.app.controller.resources.ProductResourceAssembler;
 import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedInvocationFilter;
-import de.infonautika.monomusiccorp.app.controller.utils.LinkSupport;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.repository.ProductLookup;
@@ -19,10 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.addLink;
-import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.invocationOf;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.notFound;
-import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
-import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkCreator.createLink;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.linkOn;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.methodOn;
 
 @RestController
 @RequestMapping("/api/catalog")
@@ -49,7 +47,7 @@ public class CatalogController implements SelfLinkSupplier {
 
     private void addProductSelfLink(ProductResource productResource) {
         productResource.add(
-                createLink(invocationOf(methodOn(getClass()).getProduct(productResource.getProductId()))).withRelSelf());
+                linkOn(methodOn(getClass()).getProduct(productResource.getProductId())).withRelSelf());
     }
 
     @RequestMapping("/{id}")
@@ -74,7 +72,7 @@ public class CatalogController implements SelfLinkSupplier {
 
     private void addStockAddItemLink(ProductResource productResource) {
         authorizedInvocationFilter.withRightsOn(
-                LinkSupport.invocationOf(methodOn(StockController.class).addItemsToStock(productResource.getProductId(), null)),
+                methodOn(StockController.class).addItemsToStock(productResource.getProductId(), null),
                 addLink(productResource, "stock"));
     }
 }

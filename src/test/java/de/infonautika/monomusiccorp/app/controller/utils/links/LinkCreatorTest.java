@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.invocationOf;
 import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -31,7 +30,6 @@ public class LinkCreatorTest {
         assertThat(linkCreator.getHref(), is("/base/sub"));
     }
 
-
     @Test
     public void expandRequestParametersByAnnotationValue() throws Exception {
         Invocation invocation = invocationOf(methodOn(MyController.class).requestParams("123"));
@@ -40,6 +38,7 @@ public class LinkCreatorTest {
 
         assertThat(linkCreator.getHref(), is("/base/sub?id=123"));
     }
+
 
     @Test
     public void manyRequestParameters() throws Exception {
@@ -162,6 +161,10 @@ public class LinkCreatorTest {
         LinkCreator linkCreator = new LinkCreator(invocation);
 
         assertThat(linkCreator.getHref(), is("/base/{var}/other?param=123"));
+    }
+
+    private Invocation invocationOf(Object invocation) {
+        return (Invocation) invocation;
     }
 
 

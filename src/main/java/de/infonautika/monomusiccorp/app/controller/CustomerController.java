@@ -17,10 +17,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.invocationOf;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.*;
-import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
-import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkCreator.createLink;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.linkOn;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.methodOn;
 import static de.infonautika.monomusiccorp.app.security.UserRole.ADMIN;
 
 @RestController
@@ -67,12 +66,12 @@ public class CustomerController implements SelfLinkSupplier {
 
     private CustomerResource toCustomerResource(Customer customer) {
         CustomerResource customerResource = new CustomerResourceAssembler(getClass()).toResource(customer);
-        customerResource.add(createLink(invocationOf(methodOn(getClass()).getCustomer(customer.getUsername()))).withRelSelf());
+        customerResource.add(linkOn(methodOn(getClass()).getCustomer(customer.getUsername())).withRelSelf());
         return customerResource;
     }
 
     private void addCustomerLink(CustomerResource customerResource) {
-        customerResource.add(createLink(invocationOf(methodOn(getClass()).getCustomer(customerResource.getUsername()))).withRelSelf());
+        customerResource.add(linkOn(methodOn(getClass()).getCustomer(customerResource.getUsername())).withRelSelf());
     }
 
 

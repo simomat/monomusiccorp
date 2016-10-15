@@ -16,10 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.function.Function;
 
-import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.invocationOf;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.noContent;
-import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
-import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkCreator.createLink;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.linkOn;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.methodOn;
 
 @RestController
 @RequestMapping("/api/basket")
@@ -68,16 +67,17 @@ public class ShoppingController implements SelfLinkSupplier {
     }
 
     private void addBasketLinks(Resources<PositionResource> resources) {
-        resources.add(createLink(invocationOf(methodOn(getClass()).getBasket())).withRelSelf());
-        resources.add(createLink(invocationOf(methodOn(getClass()).putToBasket(null, null))).withRel("add"));
-        resources.add(createLink(invocationOf(methodOn(getClass()).removeFromBasket(null, null))).withRel("remove"));
+        resources.add(linkOn(methodOn(getClass()).getBasket()).withRelSelf());
+        resources.add(linkOn(methodOn(getClass()).putToBasket(null, null)).withRel("add"));
+        resources.add(linkOn(methodOn(getClass()).removeFromBasket(null, null)).withRel("remove"));
     }
 
     private void addProductLinks(List<PositionResource> positionResources) {
-        positionResources.forEach(positionResource ->
-                positionResource.add(
-                    createLink(invocationOf(methodOn(CatalogController.class).getProduct(positionResource.getProductId())))
-                            .withRel("product")));
+        positionResources.forEach(positionResource -> {
+            positionResource.add(
+                    linkOn((methodOn(CatalogController.class).getProduct(positionResource.getProductId())))
+                            .withRel("product"));
+        });
     }
 
     @RequestMapping(value = "/submit", method = RequestMethod.GET)

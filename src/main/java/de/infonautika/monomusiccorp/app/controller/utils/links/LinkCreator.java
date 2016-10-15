@@ -25,12 +25,8 @@ public class LinkCreator {
 
     private Invocation invocation;
 
-    public LinkCreator(Invocation invocation) {
+    LinkCreator(Invocation invocation) {
         this.invocation = invocation;
-    }
-
-    public static LinkCreator createLink(Invocation invocation) {
-        return new LinkCreator(invocation);
     }
 
     public Link withRel(String relationName) {

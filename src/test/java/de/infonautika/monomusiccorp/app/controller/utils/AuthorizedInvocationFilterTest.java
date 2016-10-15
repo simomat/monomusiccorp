@@ -13,8 +13,7 @@ import org.springframework.security.core.GrantedAuthority;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.invocationOf;
-import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.methodOn;
 import static java.util.Arrays.stream;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -34,7 +33,7 @@ public class AuthorizedInvocationFilterTest {
         ControllerInvocationConsumer controllerInvocationConsumer = new ControllerInvocationConsumer();
 
         authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(DummyController.class).unrestrictedDummyMethod()),
+                methodOn(DummyController.class).unrestrictedDummyMethod(),
                 controllerInvocationConsumer
         );
 
@@ -47,7 +46,7 @@ public class AuthorizedInvocationFilterTest {
 
         ControllerInvocationConsumer controllerInvocationConsumer = new ControllerInvocationConsumer();
         authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(DummyController.class).restrictedDummyMethod()),
+                methodOn(DummyController.class).restrictedDummyMethod(),
                 controllerInvocationConsumer
         );
 
@@ -60,7 +59,7 @@ public class AuthorizedInvocationFilterTest {
 
         ControllerInvocationConsumer controllerInvocationConsumer = new ControllerInvocationConsumer();
         authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(DummyController.class).restrictedDummyMethod()),
+                methodOn(DummyController.class).restrictedDummyMethod(),
                 controllerInvocationConsumer
         );
 

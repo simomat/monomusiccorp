@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import java.lang.reflect.Method;
 import java.util.Optional;
@@ -19,9 +20,10 @@ public class AuthorizedInvocationFilter {
     @Autowired
     private AuthenticationFacade authenticationFacade;
 
-    public void withRightsOn(Invocation invocation, Consumer<Invocation> linkConsumer) {
-        if (accessGranted(invocation.getMethod())) {
-            linkConsumer.accept(invocation);
+    public void withRightsOn(Object invocation, Consumer<Invocation> linkConsumer) {
+        Assert.isInstanceOf(Invocation.class, invocation);
+        if (accessGranted(((Invocation)invocation).getMethod())) {
+            linkConsumer.accept((Invocation)invocation);
         }
     }
 

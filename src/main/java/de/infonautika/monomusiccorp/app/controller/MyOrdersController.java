@@ -16,9 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.invocationOf;
-import static de.infonautika.monomusiccorp.app.controller.utils.links.InvocationProxy.methodOn;
-import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkCreator.createLink;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.linkOn;
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.methodOn;
 import static de.infonautika.monomusiccorp.app.security.UserRole.CUSTOMER;
 
 @RestController
@@ -44,7 +43,7 @@ public class MyOrdersController implements SelfLinkSupplier {
                 orderStatusResources.forEach(this::addProductLinks);
 
                 Resources<OrderStatusResource> resources = new Resources<>(orderStatusResources);
-                resources.add(createLink(invocationOf(methodOn(getClass()).getOrders())).withRelSelf());
+                resources.add(linkOn(methodOn(getClass()).getOrders()).withRelSelf());
                 return resources;
             })
             .orElseThrow(() -> new ForbiddenException("not a customer"));
@@ -53,8 +52,8 @@ public class MyOrdersController implements SelfLinkSupplier {
     private void addProductLinks(OrderStatusResource orderStatusResource) {
         orderStatusResource.getPositions().forEach(pricedPositionResource ->
             authorizedInvocationFilter.withRightsOn(
-                invocationOf(methodOn(CatalogController.class).getProduct(pricedPositionResource.getProductId())),
-                invocation -> pricedPositionResource.add(createLink(invocation).withRel("product")))
+                methodOn(CatalogController.class).getProduct(pricedPositionResource.getProductId()),
+                invocation -> pricedPositionResource.add(linkOn(invocation).withRel("product")))
         );
     }
 

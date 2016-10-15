@@ -13,7 +13,7 @@ public class InvocationProxy {
 
     private static ObjenesisStd OBJENESIS = new ObjenesisStd();
 
-    public static <T> T methodOn(Class<T> type) {
+    static <T> T methodOn(Class<T> type) {
         InvocationInterceptor interceptor = new InvocationInterceptor();
         return getProxyWithInterceptor(type, interceptor, type.getClassLoader());
     }
