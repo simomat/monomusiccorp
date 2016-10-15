@@ -18,10 +18,9 @@ public class CurrentCustomerProviderImpl implements CurrentCustomerProvider {
     private CustomerLookup customerLookup;
 
     @Override
-    public Optional<String> getCustomerId() {
+    public Optional<Customer> getCustomer() {
         return authenticationFacade.getCurrentUserName()
-                .flatMap((userName) -> customerLookup.getCustomerByName(userName)
-                        .map(Customer::getId));
+                .flatMap((userName) -> customerLookup.getCustomerByName(userName));
     }
 
 }

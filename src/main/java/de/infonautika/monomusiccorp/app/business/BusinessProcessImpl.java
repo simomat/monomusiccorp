@@ -16,8 +16,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static de.infonautika.monomusiccorp.app.util.Functional.ifPresent;
 import static de.infonautika.streamjoin.Join.join;
@@ -95,14 +93,11 @@ public class BusinessProcessImpl implements BusinessProcess {
    }
 
     @Override
-    public void putToBasket(String customerId, String productId, Long quantity) {
+    public void putToBasket(Customer customer, String productId, Long quantity) {
         ifPresent(productLookup.findOne(productId),
-                product ->
-                    customerLookup.tryWithCustomer(
-                            customerId,
-                            customer -> updateShoppingBasket(customer, product, quantity)))
+                product -> updateShoppingBasket(customer, product, quantity))
         .orElseThrow(() -> {
-                logger.debug("user id {} tried to put {} to basket, but product does not exist", customerId, productId);
+                logger.debug("tried to put {} to basket of {}, but product does not exist", productId, customer.getUsername());
                 return new DoesNotExistException("product " + productId);
             });
     }
@@ -115,22 +110,11 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     @Override
-    public List<Position> getBasketContent(String customerId) {
-        return customerLookup.withCustomer(
-                customerId,
-                customer -> customer.getShoppingBasket().getPositions(),
-                Collections::emptyList);
-    }
-
-    @Override
-    public void removeFromBasket(String customerId, String productId, Long quantity) {
-        customerLookup.tryWithCustomer(customerId,
-                customer -> {
-                    ShoppingBasket shoppingBasket = customer.getShoppingBasket();
-                    shoppingBasket.remove(productId, quantity);
-                    shoppingBasketRepository.save(shoppingBasket);
-                    logger.debug("customer {} removed {} of {} from basket", customer.getUsername(), quantity, productId);
-                });
+    public void removeFromBasket(Customer customer, String productId, Long quantity) {
+        ShoppingBasket shoppingBasket = customer.getShoppingBasket();
+        shoppingBasket.remove(productId, quantity);
+        shoppingBasketRepository.save(shoppingBasket);
+        logger.debug("customer {} removed {} of {} from basket", customer.getUsername(), quantity, productId);
     }
 
     @Override
@@ -141,20 +125,16 @@ public class BusinessProcessImpl implements BusinessProcess {
     }
 
     @Override
-    public void submitOrder(String customerId) {
-        withCustomer(
-            customerId,
-            customer -> {
-                ShoppingBasket shoppingBasket = customer.getShoppingBasket();
-                if (shoppingBasket.isEmpty()) {
-                    logger.debug("rejected submit an order with empty basket for customer {}", customer.getUsername());
-                    throw new DoesNotExistException("no items in basket");
-                }
+    public void submitOrder(Customer customer) {
+        ShoppingBasket shoppingBasket = customer.getShoppingBasket();
+        if (shoppingBasket.isEmpty()) {
+            logger.debug("rejected submit an order with empty basket for customer {}", customer.getUsername());
+            throw new DoesNotExistException("no items in basket");
+        }
 
-                Order order = createAndSaveOrder(customer, shoppingBasket);
-                clearShoppingBasket(customer);
-                processNewOrder(order);
-            });
+        Order order = createAndSaveOrder(customer, shoppingBasket);
+        clearShoppingBasket(customer);
+        processNewOrder(order);
     }
 
     private Order createAndSaveOrder(Customer customer, ShoppingBasket shoppingBasket) {
@@ -177,10 +157,6 @@ public class BusinessProcessImpl implements BusinessProcess {
     private void clearShoppingBasket(Customer customer) {
         customer.getShoppingBasket().clear();
         customerLookup.save(customer);
-    }
-
-    private void withCustomer(String customerId, Consumer<Customer> customerMapper) {
-        customerLookup.tryWithCustomer(customerId, customerMapper);
     }
 
     private void processBilling(Order order) {

@@ -2,8 +2,8 @@ package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.errors.DoesNotExistException;
+import de.infonautika.monomusiccorp.app.domain.Customer;
 import de.infonautika.monomusiccorp.app.domain.Money;
-import de.infonautika.monomusiccorp.app.domain.Position;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.intermediate.CurrentCustomerProvider;
 import org.junit.Before;
@@ -22,7 +22,6 @@ import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.li
 import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.linkOfSelf;
 import static de.infonautika.monomusiccorp.app.controller.MatcherDebug.debug;
 import static de.infonautika.monomusiccorp.app.domain.Currencies.EUR;
-import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -32,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(MockitoJUnitRunner.class)
 public class ShoppingControllerTest {
 
-    private final String CUSTOMER_ID = "123";
+    private Customer customer;
     private MockMvc mvc;
 
     @InjectMocks
@@ -48,15 +47,19 @@ public class ShoppingControllerTest {
     public void setUp() {
         mvc = MockMvcBuilders.standaloneSetup(shoppingController)
                 .build();
-
-        when(currentCustomerProvider.getCustomerId()).thenReturn(Optional.of(CUSTOMER_ID));
+        customer = new Customer();
+        customer.setId("123");
+        when(currentCustomerProvider.getCustomer()).thenReturn(Optional.of(customer));
     }
 
     @Test
     public void getBasketHasSelfLinks() throws Exception {
         Product product = Product.create("A", "T", Money.of(7.98, EUR));
         product.setId("5");
-        when(businessProcess.getBasketContent(CUSTOMER_ID)).thenReturn(singletonList(Position.of(product, 2L)));
+        Customer customer = new Customer();
+        customer.getShoppingBasket().put(product, 2L);
+
+        doReturn(Optional.of(customer)).when(currentCustomerProvider).getCustomer();
 
         mvc.perform(get("/api/basket").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -71,7 +74,7 @@ public class ShoppingControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNoContent());
 
-        verify(businessProcess).putToBasket(CUSTOMER_ID, "5", 2L);
+        verify(businessProcess).putToBasket(customer, "5", 2L);
     }
 
     @Test
@@ -81,7 +84,7 @@ public class ShoppingControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        verify(businessProcess).removeFromBasket(CUSTOMER_ID, "5", 2L);
+        verify(businessProcess).removeFromBasket(customer, "5", 2L);
     }
 
     @Test

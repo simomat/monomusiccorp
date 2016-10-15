@@ -37,9 +37,9 @@ public class MyOrdersController implements SelfLinkSupplier {
     @RequestMapping(method = RequestMethod.GET)
     @Secured({CUSTOMER})
     public Resources<OrderStatusResource> getOrders() {
-        return currentCustomerProvider.getCustomerId()
-            .map(id -> {
-                List<PickingOrder> pickingOrders = pickingOrderRepository.findByOrderCustomerId(id);
+        return currentCustomerProvider.getCustomer()
+            .map(customer -> {
+                List<PickingOrder> pickingOrders = pickingOrderRepository.findByOrderCustomerId(customer.getId());
                 List<OrderStatusResource> orderStatusResources = new OrderStatusResourceAssembler(getClass()).toResources(pickingOrders);
                 orderStatusResources.forEach(this::addProductLinks);
 

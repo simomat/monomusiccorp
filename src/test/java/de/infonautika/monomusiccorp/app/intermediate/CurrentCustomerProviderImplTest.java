@@ -28,12 +28,12 @@ public class CurrentCustomerProviderImplTest {
     public CustomerLookup customerLookup;
 
     @Test
-    public void getCustomerId() throws Exception {
+    public void getCustomer() throws Exception {
         Customer customer = new Customer();
         customer.setId("1");
         when(authenticationFacade.getCurrentUserName()).thenReturn(Optional.of("Jens"));
         when(customerLookup.getCustomerByName("Jens")).thenReturn(Optional.of(customer));
 
-        assertThat(customerProvider.getCustomerId(), is(Optional.of("1")));
+        assertThat(customerProvider.getCustomer(), is(Optional.of(customer)));
     }
 }

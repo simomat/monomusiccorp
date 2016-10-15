@@ -25,7 +25,8 @@ import static de.infonautika.monomusiccorp.app.controller.MatcherDebug.debug;
 import static de.infonautika.monomusiccorp.app.domain.Currencies.EUR;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -81,8 +82,8 @@ public class MyOrdersControllerTest {
         pickingOrder.setStatus(PickingOrder.PickingStatus.OPEN);
         pickingOrder.setOrder(order);
 
-        doReturn(Optional.of("CUSTOMER_ID")).when(currentCustomerProvider).getCustomerId();
-        doReturn(singletonList(pickingOrder)).when(pickingOrderRepository).findByOrderCustomerId(anyString());
+        doReturn(Optional.of(new Customer())).when(currentCustomerProvider).getCustomer();
+        doReturn(singletonList(pickingOrder)).when(pickingOrderRepository).findByOrderCustomerId(any());
 
         mvc.perform(get("/api/orders").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

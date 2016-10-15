@@ -5,6 +5,7 @@ import de.infonautika.monomusiccorp.app.business.errors.ForbiddenException;
 import de.infonautika.monomusiccorp.app.controller.resources.PositionResource;
 import de.infonautika.monomusiccorp.app.controller.resources.PositionResourceAssembler;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
+import de.infonautika.monomusiccorp.app.domain.Customer;
 import de.infonautika.monomusiccorp.app.domain.Position;
 import de.infonautika.monomusiccorp.app.intermediate.CurrentCustomerProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,26 +33,26 @@ public class ShoppingController implements SelfLinkSupplier {
 
     @RequestMapping(value = "/{productId}", method = RequestMethod.POST)
     public ResponseEntity putToBasket(@PathVariable("productId") String productId, @RequestParam("quantity") Long quantity) {
-        return withCustomerId(
-            consumerId -> {
-                businessProcess.putToBasket(consumerId, productId, quantity);
+        return withCustomer(
+            consumer -> {
+                businessProcess.putToBasket(consumer, productId, quantity);
                 return noContent();
             });
     }
 
     @RequestMapping(value = "/{productId}", method = RequestMethod.DELETE)
     public ResponseEntity removeFromBasket(@PathVariable("productId") String productId, @RequestParam("quantity") Long quantity) {
-        return withCustomerId(id -> {
-            businessProcess.removeFromBasket(id, productId, quantity);
+        return withCustomer(customer -> {
+            businessProcess.removeFromBasket(customer, productId, quantity);
             return noContent();
         });
     }
 
     @RequestMapping(method = RequestMethod.GET)
     public Resources<PositionResource> getBasket() {
-        return withCustomerId(
-                id -> {
-                    List<Position> basketContent = businessProcess.getBasketContent(id);
+        return withCustomer(
+                customer -> {
+                    List<Position> basketContent = customer.getShoppingBasket().getPositions();
                     List<PositionResource> positionResources = new PositionResourceAssembler(getClass()).toResources(basketContent);
                     positionResources.forEach(positionResource ->
                             positionResource.add(
@@ -66,14 +67,15 @@ public class ShoppingController implements SelfLinkSupplier {
 
     @RequestMapping(value = "/submit", method = RequestMethod.GET)
     public ResponseEntity submitOrder() {
-        return withCustomerId(id -> {
-            businessProcess.submitOrder(id);
-            return noContent();
-        });
+        return withCustomer(
+                customer -> {
+                    businessProcess.submitOrder(customer);
+                    return noContent();
+                });
     }
 
-    private <T> T withCustomerId(Function<String, T> function) {
-        return currentCustomerProvider.getCustomerId()
+    private <T> T withCustomer(Function<Customer, T> function) {
+        return currentCustomerProvider.getCustomer()
                 .map(function)
                 .orElseThrow(() -> new ForbiddenException("invalid customer"));
     }
