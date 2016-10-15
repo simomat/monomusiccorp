@@ -58,15 +58,26 @@ public class ShoppingController implements SelfLinkSupplier {
                 customer -> {
                     List<Position> basketContent = customer.getShoppingBasket().getPositions();
                     List<PositionResource> positionResources = new PositionResourceAssembler(getClass()).toResources(basketContent);
-                    positionResources.forEach(positionResource ->
-                            positionResource.add(
-                                createLink(invocationOf(methodOn(CatalogController.class).getProduct(positionResource.getProductId())))
-                                        .withRel("product")));
+                    addProductLinks(positionResources);
 
                     Resources<PositionResource> resources = new Resources<>(positionResources);
-                    resources.add(createLink(invocationOf(methodOn(getClass()).getBasket())).withRelSelf());
+                    addBasketLinks(resources);
+
                     return resources;
                 });
+    }
+
+    private void addBasketLinks(Resources<PositionResource> resources) {
+        resources.add(createLink(invocationOf(methodOn(getClass()).getBasket())).withRelSelf());
+        resources.add(createLink(invocationOf(methodOn(getClass()).putToBasket(null, null))).withRel("add"));
+        resources.add(createLink(invocationOf(methodOn(getClass()).removeFromBasket(null, null))).withRel("remove"));
+    }
+
+    private void addProductLinks(List<PositionResource> positionResources) {
+        positionResources.forEach(positionResource ->
+                positionResource.add(
+                    createLink(invocationOf(methodOn(CatalogController.class).getProduct(positionResource.getProductId())))
+                            .withRel("product")));
     }
 
     @RequestMapping(value = "/submit", method = RequestMethod.GET)
