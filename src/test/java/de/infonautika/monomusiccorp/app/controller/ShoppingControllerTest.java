@@ -20,7 +20,6 @@ import java.util.Optional;
 
 import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.linkOfRel;
 import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.linkOfSelf;
-import static de.infonautika.monomusiccorp.app.controller.MatcherDebug.debug;
 import static de.infonautika.monomusiccorp.app.domain.Currencies.EUR;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -63,7 +62,7 @@ public class ShoppingControllerTest {
 
         mvc.perform(get("/api/basket").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(debug(jsonPath("$..content[0]" + linkOfRel("product")).value("/api/catalog/5")))
+                .andExpect(jsonPath("$..content[0]" + linkOfRel("product")).value("/api/catalog/5"))
                 .andExpect(jsonPath("$" + linkOfSelf()).value("/api/basket"));
     }
 
@@ -75,6 +74,26 @@ public class ShoppingControllerTest {
                     .andExpect(status().isNoContent());
 
         verify(businessProcess).putToBasket(customer, "5", 2L);
+    }
+
+    @Test
+    public void putToBasketDefaultQuantityOne() throws Exception {
+        mvc.perform(post("/api/basket/5")
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+
+        verify(businessProcess).putToBasket(customer, "5", 1L);
+    }
+
+    @Test
+    public void removeBasketDefaultQuantityOne() throws Exception {
+        mvc.perform(delete("/api/basket/5")
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+
+        verify(businessProcess).removeFromBasket(customer, "5", 1L);
     }
 
     @Test

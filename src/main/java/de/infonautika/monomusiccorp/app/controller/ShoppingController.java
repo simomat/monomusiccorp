@@ -32,7 +32,9 @@ public class ShoppingController implements SelfLinkSupplier {
     private CurrentCustomerProvider currentCustomerProvider;
 
     @RequestMapping(value = "/{productId}", method = RequestMethod.POST)
-    public ResponseEntity putToBasket(@PathVariable("productId") String productId, @RequestParam("quantity") Long quantity) {
+    public ResponseEntity putToBasket(
+            @PathVariable("productId") String productId,
+            @RequestParam(value = "quantity", required = false, defaultValue = "1") Long quantity) {
         return withCustomer(
             consumer -> {
                 businessProcess.putToBasket(consumer, productId, quantity);
@@ -41,11 +43,13 @@ public class ShoppingController implements SelfLinkSupplier {
     }
 
     @RequestMapping(value = "/{productId}", method = RequestMethod.DELETE)
-    public ResponseEntity removeFromBasket(@PathVariable("productId") String productId, @RequestParam("quantity") Long quantity) {
-        return withCustomer(customer -> {
-            businessProcess.removeFromBasket(customer, productId, quantity);
-            return noContent();
-        });
+    public ResponseEntity removeFromBasket(
+            @PathVariable("productId") String productId,
+            @RequestParam(value = "quantity", required = false, defaultValue="1") Long quantity) {
+                return withCustomer(customer -> {
+                    businessProcess.removeFromBasket(customer, productId, quantity);
+                    return noContent();
+                });
     }
 
     @RequestMapping(method = RequestMethod.GET)
