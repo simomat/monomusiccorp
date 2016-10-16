@@ -1,29 +1,16 @@
 package de.infonautika.monomusiccorp.app.business;
 
-import de.infonautika.monomusiccorp.app.domain.ItemId;
-import de.infonautika.monomusiccorp.app.domain.Order;
-import de.infonautika.monomusiccorp.app.domain.Product;
-import de.infonautika.monomusiccorp.app.domain.StockItem;
-
-import java.util.Collection;
-import java.util.List;
+import de.infonautika.monomusiccorp.app.domain.Customer;
 
 public interface BusinessProcess {
-    Collection<Product> getAllProducts();
 
-    ResultStatus addItemToStock(Quantity<ItemId> quantity);
+    ResultStatus addItemToStock(Quantity<String> quantity);
 
-    Collection<StockItem> getStocks();
+    void putToBasket(Customer customer, String productId, Long quantity);
 
-    ResultStatus putToBasket(String customerId, Quantity<ItemId> quantity);
+    void removeFromBasket(Customer customer, String productId, Long quantity);
 
-    List<Quantity<Product>> getBasketContent(String customerId);
+    void addCustomer(CustomerInfo customer);
 
-    void removeFromBasket(String customerId, Quantity<ItemId> quantity);
-
-    ResultStatus addCustomer(CustomerInfo customer);
-
-    ResultStatus submitOrder(String customerId);
-
-    List<Order> getOrders(String id);
+    void submitOrder(Customer customer);
 }

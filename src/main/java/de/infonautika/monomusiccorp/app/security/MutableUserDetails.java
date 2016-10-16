@@ -60,8 +60,9 @@ public class MutableUserDetails implements UserDetails{
         return true;
     }
 
-    public void setPassword(String password) {
+    public MutableUserDetails setPassword(String password) {
         this.password = password;
+        return this;
     }
 
     public static MutableUserDetails create(String username, String password, String... roles) {

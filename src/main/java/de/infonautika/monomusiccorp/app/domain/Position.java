@@ -1,32 +1,28 @@
 package de.infonautika.monomusiccorp.app.domain;
 
-import de.infonautika.monomusiccorp.app.persist.ItemIdConverter;
-
-import javax.persistence.Basic;
-import javax.persistence.Convert;
-import javax.persistence.Embeddable;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @Embeddable
 public class Position {
 
-    @Basic
-    @Convert(converter = ItemIdConverter.class)
-    private ItemId itemId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
+    private Product product;
     @Basic
     private Long quantity;
 
     public Position() {
     }
 
-    public Position(@NotNull ItemId itemId, @NotNull Long amount) {
-        this.itemId = itemId;
+    public Position(@NotNull Product product, @NotNull Long amount) {
+        this.product = product;
         this.quantity = amount;
     }
 
-    public ItemId getItemId() {
-        return itemId;
+    public Product getProduct() {
+        return product;
     }
 
     public Long getQuantity() {
@@ -38,24 +34,26 @@ public class Position {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Position position = (Position) o;
-        return Objects.equals(itemId, position.itemId) &&
+        return Objects.equals(product, position.product) &&
                 Objects.equals(quantity, position.quantity);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(itemId, quantity);
+        return Objects.hash(product, quantity);
     }
 
     @Override
     public String toString() {
         return "Position{" +
-                "itemId=" + itemId +
+                "product=" + product +
                 ", quantity=" + quantity +
                 '}';
     }
 
-    public static Position of(ItemId itemId, long quantity) {
-        return new Position(itemId, quantity);
+    public static Position of(Product product, long quantity) {
+        return new Position(product, quantity);
     }
+
+
 }

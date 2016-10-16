@@ -15,14 +15,21 @@ public class PickingOrder implements HasPositions {
 
     @Enumerated(EnumType.STRING)
     private PickingStatus status;
-    private Order order;
 
-    public void setStatus(PickingStatus status) {
-        this.status = status;
-    }
+    @OneToOne
+    @JoinColumn(name = "order_id")
+    private Order order;
 
     public void setOrder(Order order) {
         this.order = order;
+    }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setStatus(PickingStatus status) {
+        this.status = status;
     }
 
     public void setPickedItems(List<Position> pickedItems) {

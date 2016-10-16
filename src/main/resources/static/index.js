@@ -1,10 +1,5 @@
 $(document).ready(function(){
 
-    var ajaxError = function(jqXHR, textStatus, errorThrown){ alert(jqXHR.responseText) }
-    var post = 'POST'
-    var put = 'PUT'
-    var del = 'DELETE'
-
     var tryRedirect = function(redirectInfo){
         try {
             var redirectJson = JSON.parse(redirectInfo)
@@ -12,40 +7,11 @@ $(document).ready(function(){
         } catch(e) {}
     }
 
-    var handleData = function(data){
-        setText(JSON.stringify(data, null, 2))
-    }
-
-    var setText = function(text){
-        $('#inout').val(text)
-    }
-
-    var bindGet = function(elem, url){
-        $(elem).click(function(){
-            $.ajax({
-                url: url,
-                error: ajaxError
-            }).then(handleData)
-        });
-    }
-
-    var bindSend = function(elem, url, verb){
-        $(elem).click(function(){
-            $.ajax({
-                    url: url,
-                    type: verb,
-                    contentType: "application/json",
-                    data: $('#inout').val(),
-                    error: ajaxError
-            }).then(handleData)
-        })
-    }
-
     $('#logout').click(function(){
         var nonce = 'NONCE'
         $.ajax({
                 url: '/logout',
-                type: post,
+                type: 'POST',
                 username: nonce,
                 password: nonce,
                 success: function () { alert('hmm. expected 401 here.'); },
@@ -56,26 +22,10 @@ $(document).ready(function(){
         })
     })
 
-
-    bindGet('#createdb', '/app/createdb')
-    bindSend('#createcustomer', '/app/addCustomer', post)
-
-    bindGet('#getproducts', '/catalog/products')
-
-    bindGet('#getbasket', '/shopping/basket')
-    bindSend('#putbasket', '/shopping/basket/put', put)
-    bindSend('#removebasket', '/shopping/basket/remove', del)
-    bindGet('#submitorder', '/shopping/submitorder')
-    bindGet('#orderstatus', '/shopping/orders')
-
-
-    bindGet('#getstock', '/stock/stock')
-    bindSend('#newstockitem', '/stock/newstockitem', post)
-
     $.ajax({
-        url: 'info/currentuser'
-    }).then(function(userName){
-        $('#greeting').text('Hello ' + userName + '!')
+        url: '/api/user/currentuser'
+    }).then(function(userinfo){
+        $('#greeting').text('Hello ' + userinfo.content + '!')
     })
 
 });

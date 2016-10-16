@@ -1,12 +1,6 @@
 package de.infonautika.monomusiccorp.app.domain;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import de.infonautika.monomusiccorp.app.serialize.ItemIdSerializer;
-
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
@@ -20,20 +14,23 @@ public class Product {
     @Basic
     private String title;
 
-    public static Product create(String artist, String title) {
+    @Embedded
+    private Money price;
+
+    public static Product create(String artist, String title, Money price) {
         Product product = new Product();
         product.setArtist(artist);
         product.setTitle(title);
+        product.setPrice(price);
         return product;
     }
 
-    @JsonSerialize(using = ItemIdSerializer.class)
-    public ItemId getItemId() {
-        return new ItemId(id);
+    public String getId() {
+        return id;
     }
 
-    public void setItemId(ItemId itemId) {
-        id = itemId.getId();
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getArtist() {
@@ -70,5 +67,13 @@ public class Product {
         return "Product{" +
                 "id='" + id + '\'' +
                 '}';
+    }
+
+    public Money getPrice() {
+        return price;
+    }
+
+    public void setPrice(Money price) {
+        this.price = price;
     }
 }

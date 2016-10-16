@@ -1,6 +1,7 @@
 package de.infonautika.monomusiccorp.app.business;
 
 
+import de.infonautika.monomusiccorp.app.business.errors.DoesNotExistException;
 import de.infonautika.monomusiccorp.app.domain.*;
 import de.infonautika.monomusiccorp.app.repository.*;
 import de.infonautika.monomusiccorp.app.security.SecurityService;
@@ -9,13 +10,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
-import static de.infonautika.monomusiccorp.app.business.ResultStatus.isOk;
+import static de.infonautika.monomusiccorp.app.util.Functional.ifPresent;
 import static de.infonautika.streamjoin.Join.join;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -27,9 +29,6 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     @Autowired
     private StockItemRepository stockItemRepository;
-
-    @Autowired
-    private CustomerRepository customerRepository;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -52,14 +51,15 @@ public class BusinessProcessImpl implements BusinessProcess {
     @Autowired
     private StockNotification stockNotification;
 
-    @Override
-    public Collection<Product> getAllProducts() {
-        return productLookup.findAll();
-    }
+    @Autowired
+    private InvoiceRepository invoiceRepository;
+
+    @Autowired
+    private InvoiceDelivery invoiceDelivery;
 
     @Override
-    public ResultStatus addItemToStock(Quantity<ItemId> quantity) {
-        return findStockItem(quantity.getItem())
+    public ResultStatus addItemToStock(Quantity<String> quantity) {
+        return stockItemRepository.findByProductId(quantity.getItem())
                 .map(stockItem -> {
                     updateStockItemQuantity(stockItem, quantity);
                     return ResultStatus.OK;
@@ -75,162 +75,110 @@ public class BusinessProcessImpl implements BusinessProcess {
                         }));
     }
 
-    private void createStockItem(Product product, Quantity<ItemId> quantity) {
-        logger.debug("new stock item {} with quantity of {}", product.getItemId(), quantity.getQuantity());
+    private void createStockItem(Product product, Quantity<String> quantity) {
+        logger.debug("new stock item {} with quantity of {}", product.getId(), quantity.getQuantity());
         StockItem stockItem = StockItem.of(product, quantity.getQuantity());
         stockItemRepository.save(stockItem);
     }
 
-    private void updateStockItemQuantity(StockItem stockItem, Quantity<ItemId> quantity) {
-        assert Objects.equals(stockItem.getProduct().getItemId(), quantity.getItem());
+    private void updateStockItemQuantity(StockItem stockItem, Quantity<String> quantity) {
+        assert Objects.equals(stockItem.getProduct().getId(), quantity.getItem());
         logger.debug("update stock item {} quantity with {}", quantity.getItem(), stockItem.getQuantity());
         stockItem.addQuantity(quantity.getQuantity());
         stockItemRepository.save(stockItem);
     }
 
-    private Optional<StockItem> findStockItem(ItemId itemId) {
-        return Optional.ofNullable(stockItemRepository.findByProductId(itemId.getId()));
-    }
-
-    private Optional<Product> getProduct(ItemId itemId) {
-        return productLookup.findOne(itemId.getId());
+    private Optional<Product> getProduct(String productId) {
+        return productLookup.findOne(productId);
    }
 
     @Override
-    public Collection<StockItem> getStocks() {
-        return stockItemRepository.findAll();
+    public void putToBasket(Customer customer, String productId, Long quantity) {
+        ifPresent(productLookup.findOne(productId),
+                product -> updateShoppingBasket(customer, product, quantity))
+        .orElseThrow(() -> {
+                logger.debug("tried to put {} to basket of {}, but product does not exist", productId, customer.getUsername());
+                return new DoesNotExistException("product " + productId);
+            });
+    }
+
+    private void updateShoppingBasket(Customer customer, Product product, Long quantity) {
+        ShoppingBasket shoppingBasket = customer.getShoppingBasket();
+        shoppingBasket.put(product, quantity);
+        shoppingBasketRepository.save(shoppingBasket);
+        logger.debug("customer {} put {} to basket", customer.getUsername(), quantity);
     }
 
     @Override
-    public ResultStatus putToBasket(String customerId, Quantity<ItemId> quantity) {
-        if (!itemExists(quantity.getItem())) {
-            logger.debug("user id {} tried to put {} to basket, but product does not exist", customerId, quantity.getItem());
-            return ResultStatus.NOT_EXISTENT;
-        }
-
-        return withCustomer(
-                customerId,
-                customer -> {
-                    ShoppingBasket shoppingBasket = customer.getShoppingBasket();
-                    shoppingBasket.put(quantity.getItem(), quantity.getQuantity());
-                    shoppingBasketRepository.save(shoppingBasket);
-                    logger.debug("customer {} put {} to basket", customer.getUsername(), quantity);
-                    return ResultStatus.OK;
-                });
-    }
-
-    private boolean itemExists(ItemId item) {
-        return productLookup.exists(item.getId());
+    public void removeFromBasket(Customer customer, String productId, Long quantity) {
+        ShoppingBasket shoppingBasket = customer.getShoppingBasket();
+        shoppingBasket.remove(productId, quantity);
+        shoppingBasketRepository.save(shoppingBasket);
+        logger.debug("customer {} removed {} of {} from basket", customer.getUsername(), quantity, productId);
     }
 
     @Override
-    public List<Quantity<Product>> getBasketContent(String customerId) {
-        return withCustomer(
-                customerId,
-                customer -> toProductQuantities(customer.getShoppingBasket().getPositions()),
-                Collections::emptyList);
-    }
-
-    private List<Quantity<Product>> toProductQuantities(List<Position> positions) {
-        return productLookup.withProducts(
-                positions.stream()
-                        .map(p -> p.getItemId().getId()),
-                products ->
-                    join(positions.stream())
-                    .withKey(Position::getItemId)
-                    .on(products)
-                    .withKey(Product::getItemId)
-                    .combine((pos, prod) ->
-                            Quantity.of(prod, pos.getQuantity()))
-                    .asStream()
-                    .collect(toList()),
-                Collections::emptyList);
-    }
-
-    @Override
-    public void removeFromBasket(String customerId, Quantity<ItemId> quantity) {
-        tryWithCustomer(customerId,
-                customer -> {
-                    ShoppingBasket shoppingBasket = customer.getShoppingBasket();
-                    shoppingBasket.remove(quantity.getItem(), quantity.getQuantity());
-                    shoppingBasketRepository.save(shoppingBasket);
-                    logger.debug("customer {} removed {} of {} from basket", customer.getUsername(), quantity.getQuantity(), quantity.getItem());
-                });
-    }
-
-    @Override
-    public ResultStatus addCustomer(CustomerInfo customer) {
-        ResultStatus resultStatus = securityService.addUser(customer);
-        if (!isOk(resultStatus)) {
-            logger.info("failed to add customer {}", customer.getUsername());
-            return resultStatus;
-        }
-
-        createCustomer(customer);
+    public void addCustomer(CustomerInfo customer)  {
+        securityService.addUser(customer);
+        createCustomerAndSave(customer);
         logger.info("customer {} added", customer.getUsername());
-        return ResultStatus.OK;
     }
 
     @Override
-    public ResultStatus submitOrder(String customerId) {
-        return withCustomer(
-                customerId,
-                customer -> {
-                    ShoppingBasket shoppingBasket = customer.getShoppingBasket();
-                    if (shoppingBasket.isEmpty()) {
-                        logger.debug("rejected submit an order with empty basket for customer {}", customer.getUsername());
-                        return ResultStatus.NOT_EXISTENT;
-                    }
+    public void submitOrder(Customer customer) {
+        ShoppingBasket shoppingBasket = customer.getShoppingBasket();
+        if (shoppingBasket.isEmpty()) {
+            logger.debug("rejected submit an order with empty basket for customer {}", customer.getUsername());
+            throw new DoesNotExistException("no items in basket");
+        }
 
-                    Order order = createOrder(customer, shoppingBasket);
-                    PickingOrder pickingOrder = createPickingOrder(order);
-                    notifyNewPickingOrder(pickingOrder);
-
-                    clearShoppingBasket(shoppingBasket);
-
-                    sendInvoice(order);
-                    return ResultStatus.OK;
-                });
+        Order order = createAndSaveOrder(customer, shoppingBasket);
+        clearShoppingBasket(customer);
+        processNewOrder(order);
     }
 
-    private void clearShoppingBasket(ShoppingBasket shoppingBasket) {
-
+    private Order createAndSaveOrder(Customer customer, ShoppingBasket shoppingBasket) {
+        Order order = createOrder(customer);
+        orderRepository.save(order);
+        logger.debug("created order for customer {} with {}", customer.getUsername(), shoppingBasket.getPositions());
+        return order;
     }
 
-    private ResultStatus withCustomer(String customerId, Function<Customer, ResultStatus> customerMapper) {
-        return withCustomer(customerId, customerMapper, () -> ResultStatus.NO_CUSTOMER);
+    private void processNewOrder(Order order) {
+        processShipment(order);
+        processBilling(order);
     }
 
-    private <T> T withCustomer(String customerId, Function<Customer, T> customerMapper, Supplier<T> elseGet) {
-        return customerLookup.getCustomer(customerId)
-                .map(customerMapper)
-                .orElseGet(() -> {
-                    logger.debug("no customer with id {} found", customerId);
-                    return elseGet.get();
-                });
+    private void processShipment(Order order) {
+        PickingOrder pickingOrder = createPickingOrder(order);
+        notifyNewPickingOrder(pickingOrder);
     }
 
-    private void tryWithCustomer(String customerId, Consumer<Customer> consumer) {
-        customerLookup.getCustomer(customerId)
-                .ifPresent(consumer);
+    private void clearShoppingBasket(Customer customer) {
+        customer.getShoppingBasket().clear();
+        customerLookup.save(customer);
     }
 
-    @Override
-    public List<Order> getOrders(String customerId) {
-        return orderRepository.findByCustomerId(customerId);
+    private void processBilling(Order order) {
+        Invoice invoice = createInvoice(order);
+        invoiceDelivery.deliver(invoice);
     }
 
-    private void sendInvoice(Order order) {
-
+    private Invoice createInvoice(Order order) {
+        Invoice invoice = new Invoice();
+        invoice.setOrder(order);
+        invoice.setDate(LocalDate.now());
+        invoiceRepository.save(invoice);
+        return invoice;
     }
 
     private PickingOrder createPickingOrder(Order order) {
         PickingOrder pickingOrder = new PickingOrder();
         pickingOrder.setPickedItems(emptyList());
         pickingOrder.setStatus(PickingOrder.PickingStatus.OPEN);
-        order.setPickingOrder(pickingOrder);
+        pickingOrder.setOrder(order);
         pickingOrderRepository.save(pickingOrder);
-        logger.debug("picking order {} for order {} created", pickingOrder.getId(), order.getId());
+        logger.debug("created picking order for customer {} with {}", order.getCustomer().getUsername(), order.getPositions());
         return pickingOrder;
     }
 
@@ -238,22 +186,42 @@ public class BusinessProcessImpl implements BusinessProcess {
         stockNotification.newPickingOrder(pickingOrder);
     }
 
-    private Order createOrder(Customer customer, ShoppingBasket shoppingBasket) {
+    private Order createOrder(Customer customer) {
         Order order = new Order();
         order.setCustomer(customer);
-        order.setPositions(shoppingBasket.getPositions());
+        order.setPositions(toPricedPositions(customer.getShoppingBasket().getPositions()));
         order.setShippingAddress(customer.getAddress());
         order.setSubmitTime(LocalDateTime.now());
-        orderRepository.save(order);
-        logger.debug("order {} for customer {} created", order.getId(), customer.getUsername());
         return order;
     }
 
-    private void createCustomer(CustomerInfo customerInfo) {
+    private List<PricedPosition> toPricedPositions(List<Position> positions) {
+        return productLookup.withProducts(
+                positions.stream().map(p -> p.getProduct().getId()),
+                products ->
+                    join(products)
+                        .withKey(Product::getId)
+                        .on(positions.stream())
+                        .withKey(position -> position.getProduct().getId())
+                        .combine(this::toPricedPosition)
+                        .asStream()
+                        .collect(toList()),
+                Collections::emptyList);
+    }
+
+    private PricedPosition toPricedPosition(Product prod, Position pos) {
+        PricedPosition pricedPosition = new PricedPosition();
+        pricedPosition.setProduct(pos.getProduct());
+        pricedPosition.setQuantity(pos.getQuantity());
+        pricedPosition.setPrice(prod.getPrice());
+        return pricedPosition;
+    }
+
+    private void createCustomerAndSave(CustomerInfo customerInfo) {
         Customer customer = new Customer();
         customer.setUsername(customerInfo.getUsername());
         customer.setAddress(new Address(customerInfo.getAddress()));
-        customerRepository.save(customer);
+        customerLookup.save(customer);
     }
 
 }

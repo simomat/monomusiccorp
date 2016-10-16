@@ -5,7 +5,6 @@ import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
 import org.junit.Test;
 
-import static de.infonautika.monomusiccorp.app.ItemIdCreator.createItemId;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
@@ -21,89 +20,95 @@ public class ShoppingBasketTest {
 
     @Test
     public void putOneIsInBasket() throws Exception {
-        ItemId itemId = createItemId();
+        Product product = productOf("2");
 
-        shoppingBasket.put(itemId, 1L);
+        shoppingBasket.put(product, 1L);
 
-        assertThat(shoppingBasket.getPositions(), contains(new Position(itemId, 1L)));
+        assertThat(shoppingBasket.getPositions(), contains(new Position(product, 1L)));
+    }
+
+    private Product productOf(String productId) {
+        Product product = new Product();
+        product.setId(productId);
+        return product;
     }
 
     @Test
     public void putOneAndAddMoreWithSameId() throws Exception {
-        ItemId itemId = createItemId();
+        Product product = productOf("2");
 
-        shoppingBasket.put(itemId, 1L);
-        shoppingBasket.put(itemId, 5L);
+        shoppingBasket.put(product, 1L);
+        shoppingBasket.put(product, 5L);
 
-        assertThat(shoppingBasket.getPositions(), contains(new Position(itemId, 6L)));
+        assertThat(shoppingBasket.getPositions(), contains(new Position(product, 6L)));
     }
 
     @Test
     public void putManyRemoveSomeWithSameId() throws Exception {
-        ItemId itemId = createItemId();
+        Product product = productOf("2");
 
-        shoppingBasket.put(itemId, 10L);
-        shoppingBasket.remove(itemId, 6L);
+        shoppingBasket.put(product, 10L);
+        shoppingBasket.remove("2", 6L);
 
-        assertThat(shoppingBasket.getPositions(), contains(new Position(itemId, 4L)));
+        assertThat(shoppingBasket.getPositions(), contains(new Position(product, 4L)));
     }
 
 
     @Test
     public void doesNotAddZeroOrNegativeQuantities() throws Exception {
-        ItemId itemIdOne = createItemId();
-        ItemId itemIdTwo = createItemId();
+        Product product1 = productOf("1");
+        Product product2 = productOf("2");
 
-        shoppingBasket.put(itemIdOne, -1L);
-        shoppingBasket.put(itemIdTwo, 0L);
+        shoppingBasket.put(product1, -1L);
+        shoppingBasket.put(product2, 0L);
 
-        assertThat(shoppingBasket.getPositions(), not(contains(positionWithId(itemIdOne))));
-        assertThat(shoppingBasket.getPositions(), not(contains(positionWithId(itemIdTwo))));
+        assertThat(shoppingBasket.getPositions(), not(contains(positionWithId(product1))));
+        assertThat(shoppingBasket.getPositions(), not(contains(positionWithId(product2))));
     }
 
-    private static TypeSafeMatcher<Position> positionWithId(ItemId itemId) {
+    private static TypeSafeMatcher<Position> positionWithId(Product product) {
         return new TypeSafeMatcher<Position>() {
             @Override
             public void describeTo(Description description) {
-                description.appendText("Position with ItemId " + itemId);
+                description.appendText("Position with " + product);
             }
 
             @Override
             protected boolean matchesSafely(Position item) {
-                return item.getItemId().equals(itemId);
+                return item.getProduct().getId().equals(product.getId());
             }
         };
     }
 
     @Test
     public void removeAllRemovesPosition() throws Exception {
-        ItemId itemId = createItemId();
+        Product product = productOf("2");
 
-        shoppingBasket.put(itemId, 5L);
-        shoppingBasket.remove(itemId, 5L);
+        shoppingBasket.put(product, 5L);
+        shoppingBasket.remove(product, 5L);
 
-        assertThat(shoppingBasket.getPositions(), not(contains(positionWithId(itemId))));
+        assertThat(shoppingBasket.getPositions(), not(contains(positionWithId(product))));
     }
 
     @Test
     public void noDuplicates() throws Exception {
-        ItemId itemId = createItemId();
+        Product product = productOf("2");
 
-        shoppingBasket.put(itemId, 8L);
-        shoppingBasket.put(itemId, 1L);
+        shoppingBasket.put(product, 8L);
+        shoppingBasket.put(product, 1L);
 
         assertThat(shoppingBasket.getPositions(), hasSize(1));
     }
 
     @Test
     public void rightItemWasUpdated() throws Exception {
-        ItemId itemIdOne = createItemId();
-        ItemId itemIdTwo = createItemId();
+        Product product1 = productOf("1");
+        Product product2 = productOf("2");
 
-        shoppingBasket.put(itemIdOne, 1L);
-        shoppingBasket.put(itemIdTwo, 1L);
+        shoppingBasket.put(product1, 1L);
+        shoppingBasket.put(product2, 1L);
 
-        assertThat(shoppingBasket.getPositions(), containsInAnyOrder(new Position(itemIdOne, 1L), new Position(itemIdTwo, 1L)));
+        assertThat(shoppingBasket.getPositions(), containsInAnyOrder(new Position(product1, 1L), new Position(product2, 1L)));
     }
 
 }
