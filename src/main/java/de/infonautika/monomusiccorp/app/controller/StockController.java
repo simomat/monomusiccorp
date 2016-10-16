@@ -67,6 +67,7 @@ public class StockController implements SelfLinkSupplier {
 
         Resources<StockItemResource> stockItemResources = new Resources<>(stockItems);
         addSelfLink(stockItemResources);
+        stockItemResources.add(linkOn(methodOn(getClass()).addItemsToStock(null, null)).withRel("addstock"));
 
         return stockItemResources;
     }

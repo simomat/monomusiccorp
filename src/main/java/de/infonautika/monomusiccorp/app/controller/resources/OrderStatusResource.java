@@ -1,6 +1,5 @@
-package de.infonautika.monomusiccorp.app.controller;
+package de.infonautika.monomusiccorp.app.controller.resources;
 
-import de.infonautika.monomusiccorp.app.controller.resources.PricedPositionResource;
 import de.infonautika.monomusiccorp.app.domain.Address;
 import de.infonautika.monomusiccorp.app.domain.PickingOrder;
 import org.springframework.hateoas.ResourceSupport;

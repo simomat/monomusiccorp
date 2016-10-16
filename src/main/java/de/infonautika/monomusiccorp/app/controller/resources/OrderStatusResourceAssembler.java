@@ -1,6 +1,5 @@
 package de.infonautika.monomusiccorp.app.controller.resources;
 
-import de.infonautika.monomusiccorp.app.controller.OrderStatusResource;
 import de.infonautika.monomusiccorp.app.domain.PickingOrder;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 
