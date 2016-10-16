@@ -163,7 +163,7 @@ public class LinkCreatorTest {
         assertThat(linkCreator.getHref(), is("/base/{var}/other?param=123"));
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void withGivenRelFailsOnUnannotatedMethod() throws Exception {
         LinkCreator linkCreator = new LinkCreator(invocationOf(methodOn(MyController.class).noParametersNoMapping()));
         linkCreator.withGivenRel();
