@@ -108,12 +108,11 @@ public class StockControllerTest {
 
     @Test
     public void addItemToStock() throws Exception {
-        mvc.perform(post("/api/stock/item/33")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"quantity\":80}"))
+        mvc.perform(post("/api/stock/item/33?quantity=80")
+                .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
 
-        verify(businessProcess).addItemToStock(Quantity.of("33", 80L));
+        verify(businessProcess).addItemToStock("33", 80L);
     }
 
     private static Product product(String id, String artist, String title, Money price) {

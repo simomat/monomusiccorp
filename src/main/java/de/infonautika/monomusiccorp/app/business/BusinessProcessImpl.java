@@ -58,33 +58,27 @@ public class BusinessProcessImpl implements BusinessProcess {
     private InvoiceDelivery invoiceDelivery;
 
     @Override
-    public ResultStatus addItemToStock(Quantity<String> quantity) {
-        return stockItemRepository.findByProductId(quantity.getItem())
-                .map(stockItem -> {
-                    updateStockItemQuantity(stockItem, quantity);
-                    return ResultStatus.OK;
-                })
-                .orElseGet(() -> getProduct(quantity.getItem())
-                        .map(product -> {
-                            createStockItem(product, quantity);
-                            return ResultStatus.OK;
-                        }).
-                        orElseGet(() -> {
-                            logger.debug("no product of {} found to add stock item", quantity.getItem());
-                            return ResultStatus.NOT_EXISTENT;
-                        }));
+    public void addItemToStock(String productId, Long quantity) {
+        ifPresent(stockItemRepository.findByProductId(productId),
+                stockItem -> updateStockItemQuantity(stockItem, quantity)
+        ).orElseDo(() ->
+                ifPresent(getProduct(productId),
+                        product -> createStockItem(product, quantity))
+                .orElseThrow(() -> {
+                    logger.debug("no product of {} found to add stock item", productId);
+                    return new DoesNotExistException("product '" + productId + "' does not exist");
+                }));
     }
 
-    private void createStockItem(Product product, Quantity<String> quantity) {
-        logger.debug("new stock item {} with quantity of {}", product.getId(), quantity.getQuantity());
-        StockItem stockItem = StockItem.of(product, quantity.getQuantity());
+    private void createStockItem(Product product, Long quantity) {
+        logger.debug("new stock item {} with quantity of {}", product.getId(), quantity);
+        StockItem stockItem = StockItem.of(product, quantity);
         stockItemRepository.save(stockItem);
     }
 
-    private void updateStockItemQuantity(StockItem stockItem, Quantity<String> quantity) {
-        assert Objects.equals(stockItem.getProduct().getId(), quantity.getItem());
-        logger.debug("update stock item {} quantity with {}", quantity.getItem(), stockItem.getQuantity());
-        stockItem.addQuantity(quantity.getQuantity());
+    private void updateStockItemQuantity(StockItem stockItem, Long quantity) {
+        logger.debug("update stock item {} quantity with {}", stockItem.getProduct().getId(), quantity);
+        stockItem.addQuantity(quantity);
         stockItemRepository.save(stockItem);
     }
 
