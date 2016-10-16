@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import static de.infonautika.monomusiccorp.app.util.Functional.ifPresent;
@@ -25,7 +24,7 @@ import static java.util.stream.Collectors.toList;
 @Service
 public class BusinessProcessImpl implements BusinessProcess {
 
-    final Logger logger = LoggerFactory.getLogger(BusinessProcessImpl.class);
+    private final Logger logger = LoggerFactory.getLogger(BusinessProcessImpl.class);
 
     @Autowired
     private StockItemRepository stockItemRepository;

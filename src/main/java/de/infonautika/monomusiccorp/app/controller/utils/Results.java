@@ -10,10 +10,6 @@ public class Results {
         return () -> new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    public static <T> Supplier<ResponseEntity<T>> forbidden() {
-        return () -> new ResponseEntity<>(HttpStatus.FORBIDDEN);
-    }
-
     public static ResponseEntity<?> noContent() {
         return ResponseEntity.noContent().build();
     }

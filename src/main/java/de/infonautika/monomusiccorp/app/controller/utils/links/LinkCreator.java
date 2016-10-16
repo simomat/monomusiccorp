@@ -19,9 +19,9 @@ import java.util.function.BiConsumer;
 public class LinkCreator {
 
     private static final MappingDiscoverer MAPPING_DISCOVERER = new AnnotationMappingDiscoverer(RequestMapping.class);
-    public static final String PATHVARSTART = "PATHVARSTART-";
-    public static final String PATHVAREND = "-PATHVAREND";
-    public static final String REPLACE_PATTERN = PATHVARSTART + "(.+?)" + PATHVAREND;
+    private static final String PATHVARSTART = "PATHVARSTART-";
+    private static final String PATHVAREND = "-PATHVAREND";
+    private static final String REPLACE_PATTERN = PATHVARSTART + "(.+?)" + PATHVAREND;
 
     private Invocation invocation;
 
@@ -41,11 +41,11 @@ public class LinkCreator {
         return getUri().toString().replaceAll(REPLACE_PATTERN, "{$1}");
     }
 
-    public URI getUri() {
+    private URI getUri() {
         return getUriComponents().encode().toUri();
     }
 
-    public UriComponents getUriComponents() {
+    private UriComponents getUriComponents() {
         UriComponentsBuilder uriComponentsBuilder = bindRequestParameters(getUriComponentsBuilder());
         return bindPathVariables(uriComponentsBuilder);
     }

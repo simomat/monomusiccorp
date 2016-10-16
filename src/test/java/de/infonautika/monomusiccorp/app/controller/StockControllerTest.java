@@ -1,7 +1,6 @@
 package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
-import de.infonautika.monomusiccorp.app.business.Quantity;
 import de.infonautika.monomusiccorp.app.domain.Money;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.domain.StockItem;

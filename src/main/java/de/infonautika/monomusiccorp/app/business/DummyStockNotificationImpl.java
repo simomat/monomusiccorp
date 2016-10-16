@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class DummyStockNotificationImpl implements StockNotification {
 
-    final Logger logger = LoggerFactory.getLogger(DummyStockNotificationImpl.class);
+    private final Logger logger = LoggerFactory.getLogger(DummyStockNotificationImpl.class);
 
     @Override
     public void newPickingOrder(PickingOrder pickingOrder) {

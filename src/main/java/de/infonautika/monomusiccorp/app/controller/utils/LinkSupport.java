@@ -22,8 +22,4 @@ public class LinkSupport {
     public static Link createSelfLink(Class<?> clazz) {
         return new Link(new UriTemplate(MAPPING_DISCOVERER.getMapping(clazz)), Link.REL_SELF);
     }
-
-    public static Consumer<Invocation> addSelfLink(ResourceSupport resourceSupport) {
-        return addLink(resourceSupport, Link.REL_SELF);
-    }
 }
