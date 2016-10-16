@@ -24,15 +24,11 @@ public class InfoController {
         MessageResource messageResource = new MessageResource();
         messageResource.setMessage("Welcome to MonoMusicCorp API");
 
-
         addCatalogControllerLinks(messageResource);
         addStockControllerLinks(messageResource);
         addShoppingControllerLinks(messageResource);
-
-        // TODO: 16.10.16 add customer controller link
-
+        messageResource.add(linkOn(methodOn(CustomerController.class).getCurrent()).withRel("customer"));
         messageResource.add(linkOn(methodOn(UserController.class).currentUser()).withRel("currentuser"));
-
         addOrdersLinks(messageResource);
 
         return messageResource;

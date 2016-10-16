@@ -55,9 +55,9 @@ public class CustomerControllerTest {
     public void getAllHasSelfLink() throws Exception {
         doReturn(emptyList()).when(customerLookup).findAll();
 
-        mvc.perform(get("/api/customer").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(get("/api/customer/all").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$" + linkOfSelf()).value("/api/customer"));
+                .andExpect(jsonPath("$" + linkOfSelf()).value("/api/customer/all"));
     }
 
     @Test
@@ -65,7 +65,6 @@ public class CustomerControllerTest {
         Customer customer = new Customer();
         customer.setUsername("hans");
         doReturn(Optional.of(customer)).when(customerLookup).getCustomer(any());
-        doReturn(Optional.of("hans")).when(authenticationFacade).getCurrentUserName();
 
         mvc.perform(get("/api/customer/hans").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

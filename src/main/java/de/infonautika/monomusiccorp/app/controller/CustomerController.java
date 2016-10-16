@@ -4,11 +4,13 @@ import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.CustomerInfo;
 import de.infonautika.monomusiccorp.app.controller.resources.CustomerResource;
 import de.infonautika.monomusiccorp.app.controller.resources.CustomerResourceAssembler;
+import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedInvocationFilter;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
 import de.infonautika.monomusiccorp.app.domain.Customer;
+import de.infonautika.monomusiccorp.app.intermediate.CurrentCustomerProvider;
 import de.infonautika.monomusiccorp.app.repository.CustomerLookup;
-import de.infonautika.monomusiccorp.app.security.AuthenticationFacade;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.ResourceSupport;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
@@ -16,8 +18,11 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
-import static de.infonautika.monomusiccorp.app.controller.utils.Results.*;
+import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.addLink;
+import static de.infonautika.monomusiccorp.app.controller.utils.Results.noContent;
+import static de.infonautika.monomusiccorp.app.controller.utils.Results.notFound;
 import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.linkOn;
 import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.methodOn;
 import static de.infonautika.monomusiccorp.app.security.UserRole.ADMIN;
@@ -33,35 +38,66 @@ public class CustomerController implements SelfLinkSupplier {
     private CustomerLookup customerLookup;
 
     @Autowired
-    private AuthenticationFacade authenticationFacade;
+    private CurrentCustomerProvider currentCustomerProvider;
+
+    @Autowired
+    private AuthorizedInvocationFilter authorizedInvocationFilter;
 
     @RequestMapping(method = RequestMethod.GET)
-    @Secured(ADMIN)
-    public Resources<CustomerResource> getCustomers(){
+    public ResponseEntity getCurrent() {
+
+        Optional<Customer> customer = currentCustomerProvider.getCustomer();
+        ResourceSupport resource;
+        if (customer.isPresent()) {
+            resource = toCustomerResource(customer.get());
+        } else {
+            resource = new ResourceSupport();
+        }
+
+        addSelfLink(resource);
+        authorizedInvocationFilter.withRightsOn(
+                methodOn(getClass()).getCustomers(),
+                addLink(resource, "customers")
+        );
+
+        authorizedInvocationFilter.withRightsOn(
+                methodOn(getClass()).register(null),
+                addLink(resource, "register")
+        );
+
+        authorizedInvocationFilter.withRightsOn(
+                methodOn(getClass()).getCustomer(null),
+                addLink(resource, "customer")
+        );
+
+        return ResponseEntity.ok(resource);
+    }
+
+    @RequestMapping(value = "all", method = RequestMethod.GET)
+    @Secured({ADMIN})
+    public Resources<CustomerResource> getCustomers() {
         List<CustomerResource> customers = new CustomerResourceAssembler(getClass()).toResources(customerLookup.findAll());
         customers.forEach(this::addCustomerLink);
 
         Resources<CustomerResource> customerResources = new Resources<>(customers);
-        addSelfLink(customerResources);
+        customerResources.add(linkOn(methodOn(getClass()).getCustomers()).withRelSelf());
 
         return customerResources;
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<?> register(@RequestBody CustomerInfo customer){
+    public ResponseEntity<?> register(@RequestBody CustomerInfo customer) {
         businessProcess.addCustomer(customer);
         return noContent();
     }
 
     @RequestMapping(value = "/{userName}", method = RequestMethod.GET)
+    @Secured({ADMIN})
     public HttpEntity<CustomerResource> getCustomer(@PathVariable("userName") String userName) {
-        return authenticationFacade.getCurrentUserName()
-                .filter(name -> name.equals(userName))
-                .map(name -> customerLookup.getCustomer(userName)
-                        .map(this::toCustomerResource)
-                        .map(ResponseEntity::ok)
-                        .orElseGet(notFound()))
-                .orElseGet(forbidden());
+        return customerLookup.getCustomer(userName)
+                .map(this::toCustomerResource)
+                .map(ResponseEntity::ok)
+                .orElseGet(notFound());
     }
 
     private CustomerResource toCustomerResource(Customer customer) {
