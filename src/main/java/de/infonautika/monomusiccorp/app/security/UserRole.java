@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 import static java.util.Arrays.stream;
 
 public class UserRole {
-    public static final String ADMIN = "ADMIN";
-    public static final String STOCK_MANAGER = "STOCK_MANAGER";
-    public static final String CUSTOMER = "CUSTOMER";
+    public static final String ADMIN = "ROLE_ADMIN";
+    public static final String STOCK_MANAGER = "ROLE_STOCK_MANAGER";
+    public static final String CUSTOMER = "ROLE_CUSTOMER";
 
     public static Collection<? extends GrantedAuthority> toAuthorities(String... roles) {
         return stream(roles)

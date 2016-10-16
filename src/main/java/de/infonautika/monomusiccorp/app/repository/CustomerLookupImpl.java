@@ -8,9 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 @Service
 public class CustomerLookupImpl implements CustomerLookup {
@@ -21,8 +18,8 @@ public class CustomerLookupImpl implements CustomerLookup {
     private CustomerRepository customerRepository;
 
     @Override
-    public Optional<Customer> getCustomer(String customerId) {
-        return Optional.of(customerRepository.findById(customerId));
+    public Optional<Customer> getCustomerById(String customerId) {
+        return Optional.ofNullable(customerRepository.findById(customerId));
     }
 
     @Override
@@ -33,21 +30,6 @@ public class CustomerLookupImpl implements CustomerLookup {
     @Override
     public void save(Customer customer) {
         customerRepository.save(customer);
-    }
-
-    @Override
-    public  <T> T withCustomer(String customerId, Function<Customer, T> customerMapper, Supplier<T> elseGet) {
-        return getCustomer(customerId)
-                .map(customerMapper)
-                .orElseGet(() -> {
-                    logger.debug("no customer with id {} found", customerId);
-                    return elseGet.get();
-                });
-    }
-
-    @Override
-    public void tryWithCustomer(String customerId, Consumer<Customer> consumer) {
-        getCustomer(customerId).ifPresent(consumer);
     }
 
     @Override

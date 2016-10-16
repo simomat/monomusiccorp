@@ -1,7 +1,6 @@
 package de.infonautika.monomusiccorp.app.controller.utils;
 
 import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
 
 import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.createSelfLink;
 

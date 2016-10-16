@@ -10,6 +10,7 @@ import de.infonautika.monomusiccorp.app.domain.Customer;
 import de.infonautika.monomusiccorp.app.intermediate.CurrentCustomerProvider;
 import de.infonautika.monomusiccorp.app.repository.CustomerLookup;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.ResourceSupport;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpEntity;
@@ -54,7 +55,10 @@ public class CustomerController implements SelfLinkSupplier {
             resource = new ResourceSupport();
         }
 
-        addSelfLink(resource);
+        if (!hasSelfLink(resource)) {
+            addSelfLink(resource);
+        }
+
         authorizedInvocationFilter.withRightsOn(
                 methodOn(getClass()).getCustomers(),
                 addLink(resource, "customers")
@@ -73,7 +77,12 @@ public class CustomerController implements SelfLinkSupplier {
         return ResponseEntity.ok(resource);
     }
 
-    @RequestMapping(value = "all", method = RequestMethod.GET)
+    private boolean hasSelfLink(ResourceSupport resource) {
+        return resource.getLinks().stream()
+                .anyMatch(link -> link.getRel().equals(Link.REL_SELF));
+    }
+
+    @RequestMapping(value = "/all", method = RequestMethod.GET)
     @Secured({ADMIN})
     public Resources<CustomerResource> getCustomers() {
         List<CustomerResource> customers = new CustomerResourceAssembler(getClass()).toResources(customerLookup.findAll());
@@ -94,7 +103,7 @@ public class CustomerController implements SelfLinkSupplier {
     @RequestMapping(value = "/{userName}", method = RequestMethod.GET)
     @Secured({ADMIN})
     public HttpEntity<CustomerResource> getCustomer(@PathVariable("userName") String userName) {
-        return customerLookup.getCustomer(userName)
+        return customerLookup.getCustomerByName(userName)
                 .map(this::toCustomerResource)
                 .map(ResponseEntity::ok)
                 .orElseGet(notFound());

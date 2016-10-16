@@ -69,7 +69,7 @@ public class OrdersController implements SelfLinkSupplier {
         if (customer.isPresent()) {
             return customer;
         }
-        return customerLookup.getCustomer(customerDescriptor);
+        return customerLookup.getCustomerById(customerDescriptor);
     }
 
     private Resources<OrderStatusResource> getOrderStatusResource(Customer customer) {

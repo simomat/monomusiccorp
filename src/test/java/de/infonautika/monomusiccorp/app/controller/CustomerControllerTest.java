@@ -64,7 +64,7 @@ public class CustomerControllerTest {
     public void getCustomerHasSelfLink() throws Exception {
         Customer customer = new Customer();
         customer.setUsername("hans");
-        doReturn(Optional.of(customer)).when(customerLookup).getCustomer(any());
+        doReturn(Optional.of(customer)).when(customerLookup).getCustomerByName(any());
 
         mvc.perform(get("/api/customer/hans").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
