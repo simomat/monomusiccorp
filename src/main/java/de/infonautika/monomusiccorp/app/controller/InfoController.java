@@ -30,11 +30,24 @@ public class InfoController {
         addShoppingControllerLinks(messageResource);
 
         // TODO: 16.10.16 add customer controller link
-        // TODO: 16.10.16 add myOrders controller link
 
         messageResource.add(linkOn(methodOn(UserController.class).currentUser()).withRel("currentuser"));
 
+        addOrdersLinks(messageResource);
+
         return messageResource;
+    }
+
+    private void addOrdersLinks(MessageResource messageResource) {
+        authorizedInvocationFilter.withRightsOn(
+                methodOn(OrdersController.class).getOrders(),
+                addLink(messageResource, "myorders")
+        );
+
+        authorizedInvocationFilter.withRightsOn(
+                methodOn(OrdersController.class).getOrders(null),
+                addLink(messageResource, "customerorders")
+        );
     }
 
     private void addShoppingControllerLinks(MessageResource messageResource) {

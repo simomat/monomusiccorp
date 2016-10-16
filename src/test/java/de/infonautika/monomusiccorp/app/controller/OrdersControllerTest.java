@@ -31,12 +31,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(MockitoJUnitRunner.class)
-public class MyOrdersControllerTest {
+public class OrdersControllerTest {
 
     private MockMvc mvc;
 
     @InjectMocks
-    public MyOrdersController myOrdersController;
+    public OrdersController ordersController;
 
     @Mock
     public PickingOrderRepository pickingOrderRepository;
@@ -49,7 +49,7 @@ public class MyOrdersControllerTest {
 
     @Before
     public void setUp() {
-        mvc = MockMvcBuilders.standaloneSetup(myOrdersController)
+        mvc = MockMvcBuilders.standaloneSetup(ordersController)
                 .build();
         initLinkBuilderAlwaysAuthorized();
     }

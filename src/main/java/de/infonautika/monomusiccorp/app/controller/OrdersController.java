@@ -32,7 +32,7 @@ import static de.infonautika.monomusiccorp.app.security.UserRole.CUSTOMER;
 
 @RestController
 @RequestMapping("/api/orders")
-public class MyOrdersController implements SelfLinkSupplier {
+public class OrdersController implements SelfLinkSupplier {
 
     @Autowired
     private PickingOrderRepository pickingOrderRepository;
