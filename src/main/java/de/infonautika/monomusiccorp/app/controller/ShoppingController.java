@@ -5,6 +5,7 @@ import de.infonautika.monomusiccorp.app.business.errors.ForbiddenException;
 import de.infonautika.monomusiccorp.app.controller.resources.PositionResource;
 import de.infonautika.monomusiccorp.app.controller.resources.PositionResourceAssembler;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
+import de.infonautika.monomusiccorp.app.controller.utils.links.Relation;
 import de.infonautika.monomusiccorp.app.domain.Customer;
 import de.infonautika.monomusiccorp.app.domain.Position;
 import de.infonautika.monomusiccorp.app.intermediate.CurrentCustomerProvider;
@@ -34,6 +35,7 @@ public class ShoppingController implements SelfLinkSupplier {
 
     @RequestMapping(value = "/{productId}", method = RequestMethod.POST)
     @Secured(CUSTOMER)
+    @Relation("basketput")
     public ResponseEntity putToBasket(
             @PathVariable("productId") String productId,
             @RequestParam(value = "quantity", required = false, defaultValue = "1") Long quantity) {
@@ -46,6 +48,7 @@ public class ShoppingController implements SelfLinkSupplier {
 
     @RequestMapping(value = "/{productId}", method = RequestMethod.DELETE)
     @Secured(CUSTOMER)
+    @Relation("basketdel")
     public ResponseEntity removeFromBasket(
             @PathVariable("productId") String productId,
             @RequestParam(value = "quantity", required = false, defaultValue="1") Long quantity) {
@@ -57,6 +60,7 @@ public class ShoppingController implements SelfLinkSupplier {
 
     @RequestMapping(method = RequestMethod.GET)
     @Secured(CUSTOMER)
+    @Relation("basket")
     public Resources<PositionResource> getBasket() {
         return withCustomer(
                 customer -> {
@@ -73,20 +77,21 @@ public class ShoppingController implements SelfLinkSupplier {
 
     private void addBasketLinks(Resources<PositionResource> resources) {
         resources.add(linkOn(methodOn(getClass()).getBasket()).withRelSelf());
-        resources.add(linkOn(methodOn(getClass()).putToBasket(null, null)).withRel("add"));
-        resources.add(linkOn(methodOn(getClass()).removeFromBasket(null, null)).withRel("remove"));
-        resources.add(linkOn(methodOn(getClass()).submitOrder()).withRel("submit"));
+        resources.add(linkOn(methodOn(getClass()).putToBasket(null, null)).withGivenRel());
+        resources.add(linkOn(methodOn(getClass()).removeFromBasket(null, null)).withGivenRel());
+        resources.add(linkOn(methodOn(getClass()).submitOrder()).withGivenRel());
     }
 
     private void addProductLinks(List<PositionResource> positionResources) {
         positionResources.forEach(positionResource ->
                 positionResource.add(
                     linkOn((methodOn(CatalogController.class).getProduct(positionResource.getProductId())))
-                            .withRel("product")));
+                            .withGivenRel()));
     }
 
     @RequestMapping(value = "/submit", method = RequestMethod.GET)
     @Secured(CUSTOMER)
+    @Relation("submit")
     public ResponseEntity submitOrder() {
         return withCustomer(
                 customer -> {

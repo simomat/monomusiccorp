@@ -100,4 +100,17 @@ public class LinkCreator {
             }
         }
     }
+
+    public Link withGivenRel() {
+        Relation annotation = invocation.getMethod().getAnnotation(Relation.class);
+        if (annotation == null) {
+            throw new IllegalArgumentException("expected method '" + getMethodDescription() + "' to be annotated with " + Relation.class.getName());
+        }
+        return withRel(annotation.value());
+    }
+
+    private String getMethodDescription() {
+        return invocation.getMethod().getDeclaringClass().getName() +
+                "." + invocation.getMethod().getName() + "()";
+    }
 }

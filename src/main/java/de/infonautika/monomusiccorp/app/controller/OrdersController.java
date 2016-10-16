@@ -7,13 +7,15 @@ import de.infonautika.monomusiccorp.app.controller.resources.OrderStatusResource
 import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedInvocationFilter;
 import de.infonautika.monomusiccorp.app.controller.utils.LinkSupport;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
+import de.infonautika.monomusiccorp.app.controller.utils.links.Invocation;
+import de.infonautika.monomusiccorp.app.controller.utils.links.Relation;
 import de.infonautika.monomusiccorp.app.domain.Customer;
 import de.infonautika.monomusiccorp.app.domain.PickingOrder;
 import de.infonautika.monomusiccorp.app.intermediate.CurrentCustomerProvider;
 import de.infonautika.monomusiccorp.app.repository.CustomerLookup;
 import de.infonautika.monomusiccorp.app.repository.PickingOrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Link;
+import org.springframework.hateoas.ResourceSupport;
 import org.springframework.hateoas.Resources;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.linkOn;
@@ -48,23 +51,25 @@ public class OrdersController implements SelfLinkSupplier {
 
     @RequestMapping(method = RequestMethod.GET)
     @Secured({CUSTOMER})
+    @Relation("myorders")
     public Resources<OrderStatusResource> getOrders() {
         return currentCustomerProvider.getCustomer()
             .map(this::getOrderStatusResource)
-            .map(addLink(methodOn(getClass()).getOrders(), Link.REL_SELF))
+            .map(addLinkSelf(methodOn(getClass()).getOrders()))
             .orElseThrow(() -> new ForbiddenException("not a customer"));
     }
 
     @RequestMapping(value = "{customer}", method = RequestMethod.GET)
     @Secured({ADMIN})
+    @Relation("customerorders")
     public Resources<OrderStatusResource> getOrders(@PathVariable("customer") String customerDescriptor) {
         return getCustomer(customerDescriptor)
                 .map(this::getOrderStatusResource)
-                .map(addLink(methodOn(getClass()).getOrders(customerDescriptor), "customerorders"))
+                .map(addLink(methodOn(getClass()).getOrders(customerDescriptor)))
                 .orElseThrow(() -> new DoesNotExistException("no customer of '" + customerDescriptor + "' found"));
     }
 
-    private Optional<Customer> getCustomer(@PathVariable("customer") String customerDescriptor) {
+    private Optional<Customer> getCustomer(String customerDescriptor) {
         Optional<Customer> customer = customerLookup.getCustomerByName(customerDescriptor);
         if (customer.isPresent()) {
             return customer;
@@ -84,15 +89,23 @@ public class OrdersController implements SelfLinkSupplier {
         orderStatusResource.getPositions().forEach(pricedPositionResource ->
             authorizedInvocationFilter.withRightsOn(
                 methodOn(CatalogController.class).getProduct(pricedPositionResource.getProductId()),
-                invocation -> pricedPositionResource.add(linkOn(invocation).withRel("product")))
+                invocation -> pricedPositionResource.add(linkOn(invocation).withGivenRel()))
         );
     }
 
-    private Function<Resources<OrderStatusResource>, Resources<OrderStatusResource>> addLink(Object invocation, String relationName) {
+    private Function<Resources<OrderStatusResource>, Resources<OrderStatusResource>> addLinkSelf(Object invocation) {
+        return addLinkWithBuilder(invocation, LinkSupport::addSelfLink);
+    }
+
+    private Function<Resources<OrderStatusResource>, Resources<OrderStatusResource>> addLink(Object invocation) {
+        return addLinkWithBuilder(invocation, LinkSupport::addLink);
+    }
+
+    private Function<Resources<OrderStatusResource>, Resources<OrderStatusResource>> addLinkWithBuilder(Object invocation, Function<ResourceSupport, Consumer<Invocation>> linkCreator) {
         return orderStatusResources -> {
             authorizedInvocationFilter.withRightsOn(
                     invocation,
-                    LinkSupport.addLink(orderStatusResources, relationName));
+                    linkCreator.apply(orderStatusResources));
             return orderStatusResources;
         };
     }

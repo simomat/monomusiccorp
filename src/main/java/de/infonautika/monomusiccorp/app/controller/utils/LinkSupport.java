@@ -1,7 +1,6 @@
 package de.infonautika.monomusiccorp.app.controller.utils;
 
 import de.infonautika.monomusiccorp.app.controller.utils.links.Invocation;
-import de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.ResourceSupport;
 import org.springframework.hateoas.UriTemplate;
@@ -11,12 +10,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.function.Consumer;
 
+import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.linkOn;
+
 public class LinkSupport {
 
     private static final MappingDiscoverer MAPPING_DISCOVERER = new AnnotationMappingDiscoverer(RequestMapping.class);
 
-    public static Consumer<Invocation> addLink(ResourceSupport resource, String relationName) {
-        return invocation -> resource.add(LinkFacade.linkOn(invocation).withRel(relationName));
+    public static Consumer<Invocation> addSelfLink(ResourceSupport resource) {
+        return invocation -> resource.add(linkOn(invocation).withRelSelf());
+    }
+
+    public static Consumer<Invocation> addLink(ResourceSupport resource) {
+        return invocation -> resource.add(linkOn(invocation).withGivenRel());
     }
 
     public static Link createSelfLink(Class<?> clazz) {

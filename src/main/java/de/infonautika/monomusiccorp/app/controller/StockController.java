@@ -4,6 +4,7 @@ import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.controller.resources.StockItemResource;
 import de.infonautika.monomusiccorp.app.controller.resources.StockItemResourceAssembler;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
+import de.infonautika.monomusiccorp.app.controller.utils.links.Relation;
 import de.infonautika.monomusiccorp.app.domain.StockItem;
 import de.infonautika.monomusiccorp.app.repository.StockItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ public class StockController implements SelfLinkSupplier {
 
     @RequestMapping(value = "/item/{id}", method = RequestMethod.POST)
     @Secured({STOCK_MANAGER, ADMIN})
+    @Relation("addstock")
     public ResponseEntity addItemsToStock(
             @PathVariable("id") String productId,
             @RequestParam Long quantity) {
@@ -43,6 +45,7 @@ public class StockController implements SelfLinkSupplier {
 
     @RequestMapping(value = "/item/{id}", method = RequestMethod.GET)
     @Secured({STOCK_MANAGER, ADMIN})
+    @Relation("stockitem")
     public HttpEntity<StockItemResource> getStockItem(@PathVariable(value="id") String productId) {
         return stockItemRepository.findByProductId(productId)
                 .map(this::toResource)
@@ -59,6 +62,7 @@ public class StockController implements SelfLinkSupplier {
     @RequestMapping
     @GetMapping
     @Secured({STOCK_MANAGER, ADMIN})
+    @Relation("stockitems")
     public Resources<StockItemResource> getStockItems() {
         List<StockItemResource> stockItems = getStockItemResources();
         stockItems.forEach(stockItemResource -> {
@@ -68,7 +72,7 @@ public class StockController implements SelfLinkSupplier {
 
         Resources<StockItemResource> stockItemResources = new Resources<>(stockItems);
         addSelfLink(stockItemResources);
-        stockItemResources.add(linkOn(methodOn(getClass()).addItemsToStock(null, null)).withRel("addstock"));
+        stockItemResources.add(linkOn(methodOn(getClass()).addItemsToStock(null, null)).withGivenRel());
 
         return stockItemResources;
     }
@@ -85,6 +89,6 @@ public class StockController implements SelfLinkSupplier {
 
     private void addLinkToProduct(StockItemResource stockItemResource) {
         stockItemResource.add(
-                linkOn(methodOn(CatalogController.class).getProduct(stockItemResource.getProductId())).withRel("product"));
+                linkOn(methodOn(CatalogController.class).getProduct(stockItemResource.getProductId())).withGivenRel());
     }
 }

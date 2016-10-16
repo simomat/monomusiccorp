@@ -1,6 +1,7 @@
 package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.business.errors.DoesNotExistException;
+import de.infonautika.monomusiccorp.app.controller.utils.links.Relation;
 import de.infonautika.monomusiccorp.app.security.AuthenticationFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
@@ -20,6 +21,7 @@ public class UserController {
     private AuthenticationFacade authenticationFacade;
 
     @RequestMapping("/currentuser")
+    @Relation("user")
     public ResponseEntity currentUser() {
         return authenticationFacade.getCurrentUserName()
                 .map(username -> {
