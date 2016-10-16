@@ -86,7 +86,7 @@ public class LinkCreator {
     private String getRequestParameterName(Parameter parameter) {
         String value = parameter.getAnnotation(RequestParam.class).value();
         if (!StringUtils.hasText(value)) {
-            throw new IllegalArgumentException("no value for PathVariable given");
+            throw new IllegalArgumentException("no value for RequestParam given");
         }
         return value;
     }
