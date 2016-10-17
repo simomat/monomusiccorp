@@ -24,7 +24,7 @@ To reduce the overhead of maintaining a UI, `monomusiccorp` provides a HAL-based
 ###### HAL implementation
 In general, Spring-HATEOAS helps to manage resources and links, but link-building still lacks support of templates (which are described in the HAL standard). Also, a general support for an API description service ("CURIEs") is provided, but there's no automatic information gathering mechanism.
 
-To serve a well self-describing interface, both link building and CURIE information gathering in (re-)implemented in `monomusiccorp`. 
+To serve a well self-describing interface, both link building and CURIE information gathering is (re-)implemented in `monomusiccorp`. 
 
 #### Run it
 - Check out the repository, go to path
