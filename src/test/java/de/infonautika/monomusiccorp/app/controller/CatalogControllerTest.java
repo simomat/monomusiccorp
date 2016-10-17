@@ -20,6 +20,7 @@ import java.util.function.Consumer;
 
 import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.linkOfRel;
 import static de.infonautika.monomusiccorp.app.controller.ControllerConstants.linkOfSelf;
+import static de.infonautika.monomusiccorp.app.controller.MatcherDebug.debug;
 import static de.infonautika.monomusiccorp.app.domain.Currencies.EUR;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -108,7 +109,7 @@ public class CatalogControllerTest {
 
         mvc.perform(get("/api/catalog/22").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$" + linkOfRel("stock")).exists());
+                .andExpect(debug(jsonPath("$" + linkOfRel("addstock")).exists()));
     }
 
 }

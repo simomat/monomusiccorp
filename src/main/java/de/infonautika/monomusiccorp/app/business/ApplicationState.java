@@ -20,7 +20,7 @@ import static java.util.Arrays.asList;
 @Service
 public class ApplicationState {
 
-    final Logger logger = LoggerFactory.getLogger(ApplicationState.class);
+    private final Logger logger = LoggerFactory.getLogger(ApplicationState.class);
 
     @Autowired
     private ProductRepository productRepo;

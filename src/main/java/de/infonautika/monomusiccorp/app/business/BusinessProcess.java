@@ -4,7 +4,7 @@ import de.infonautika.monomusiccorp.app.domain.Customer;
 
 public interface BusinessProcess {
 
-    ResultStatus addItemToStock(Quantity<String> quantity);
+    void addItemToStock(String productId, Long quantity);
 
     void putToBasket(Customer customer, String productId, Long quantity);
 

@@ -1,7 +1,6 @@
 package de.infonautika.monomusiccorp.app.controller;
 
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
-import de.infonautika.monomusiccorp.app.business.Quantity;
 import de.infonautika.monomusiccorp.app.domain.Money;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.domain.StockItem;
@@ -108,12 +107,11 @@ public class StockControllerTest {
 
     @Test
     public void addItemToStock() throws Exception {
-        mvc.perform(post("/api/stock/item/33")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"quantity\":80}"))
+        mvc.perform(post("/api/stock/item/33?quantity=80")
+                .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
 
-        verify(businessProcess).addItemToStock(Quantity.of("33", 80L));
+        verify(businessProcess).addItemToStock("33", 80L);
     }
 
     private static Product product(String id, String artist, String title, Money price) {

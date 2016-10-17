@@ -19,9 +19,9 @@ import java.util.function.BiConsumer;
 public class LinkCreator {
 
     private static final MappingDiscoverer MAPPING_DISCOVERER = new AnnotationMappingDiscoverer(RequestMapping.class);
-    public static final String PATHVARSTART = "PATHVARSTART-";
-    public static final String PATHVAREND = "-PATHVAREND";
-    public static final String REPLACE_PATTERN = PATHVARSTART + "(.+?)" + PATHVAREND;
+    private static final String PATHVARSTART = "PATHVARSTART-";
+    private static final String PATHVAREND = "-PATHVAREND";
+    private static final String REPLACE_PATTERN = PATHVARSTART + "(.+?)" + PATHVAREND;
 
     private Invocation invocation;
 
@@ -41,11 +41,11 @@ public class LinkCreator {
         return getUri().toString().replaceAll(REPLACE_PATTERN, "{$1}");
     }
 
-    public URI getUri() {
+    private URI getUri() {
         return getUriComponents().encode().toUri();
     }
 
-    public UriComponents getUriComponents() {
+    private UriComponents getUriComponents() {
         UriComponentsBuilder uriComponentsBuilder = bindRequestParameters(getUriComponentsBuilder());
         return bindPathVariables(uriComponentsBuilder);
     }
@@ -86,7 +86,7 @@ public class LinkCreator {
     private String getRequestParameterName(Parameter parameter) {
         String value = parameter.getAnnotation(RequestParam.class).value();
         if (!StringUtils.hasText(value)) {
-            throw new IllegalArgumentException("no value for PathVariable given");
+            throw new IllegalArgumentException("no value for RequestParam given");
         }
         return value;
     }
@@ -99,5 +99,18 @@ public class LinkCreator {
                 handler.accept(parameter, invocation.getArguments()[i]);
             }
         }
+    }
+
+    public Link withGivenRel() {
+        Relation annotation = invocation.getMethod().getAnnotation(Relation.class);
+        if (annotation == null) {
+            throw new IllegalArgumentException("expected method '" + getMethodDescription() + "' to be annotated with " + Relation.class.getName());
+        }
+        return withRel(annotation.value());
+    }
+
+    private String getMethodDescription() {
+        return invocation.getMethod().getDeclaringClass().getName() +
+                "." + invocation.getMethod().getName() + "()";
     }
 }

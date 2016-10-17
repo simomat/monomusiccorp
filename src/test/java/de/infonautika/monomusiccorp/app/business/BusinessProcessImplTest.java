@@ -98,14 +98,12 @@ public class BusinessProcessImplTest {
 
     // TODO: 11.10.16 add test for atomicity
 
-    @Test
+    @Test(expected = DoesNotExistException.class)
     public void addStockItemWithoutProductFails() throws Exception {
         stateSetup()
                 .havingProducts();
 
-        ResultStatus actual = businessProcess.addItemToStock(Quantity.of("10", 5L));
-
-        assertThat(actual, is(ResultStatus.NOT_EXISTENT));
+        businessProcess.addItemToStock("10", 5L);
     }
 
     @Test
@@ -115,7 +113,7 @@ public class BusinessProcessImplTest {
 
         when(productLookup.findOne(itemId)).thenReturn(Optional.of(product));
 
-        businessProcess.addItemToStock(Quantity.of(itemId, 5L));
+        businessProcess.addItemToStock(itemId, 5L);
 
         verify(stockItemRepository).save(stockItemCaptor.capture());
         assertThat(stockItemCaptor.getValue(), equalsStockItem(StockItem.of(product, 5L)));
@@ -126,7 +124,7 @@ public class BusinessProcessImplTest {
         stateSetup()
                 .havingStockOf(StockItem.of(productOf("10"), 5L));
 
-        businessProcess.addItemToStock(Quantity.of("10", 6L));
+        businessProcess.addItemToStock("10", 6L);
 
         verify(stockItemRepository).save(stockItemCaptor.capture());
         assertThat(stockItemCaptor.getValue(), equalsStockItem(StockItem.of(productOf("10"), 11L)));

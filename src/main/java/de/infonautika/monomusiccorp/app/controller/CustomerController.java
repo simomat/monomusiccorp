@@ -6,6 +6,7 @@ import de.infonautika.monomusiccorp.app.controller.resources.CustomerResource;
 import de.infonautika.monomusiccorp.app.controller.resources.CustomerResourceAssembler;
 import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedInvocationFilter;
 import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
+import de.infonautika.monomusiccorp.app.controller.utils.links.Relation;
 import de.infonautika.monomusiccorp.app.domain.Customer;
 import de.infonautika.monomusiccorp.app.intermediate.CurrentCustomerProvider;
 import de.infonautika.monomusiccorp.app.repository.CustomerLookup;
@@ -45,6 +46,7 @@ public class CustomerController implements SelfLinkSupplier {
     private AuthorizedInvocationFilter authorizedInvocationFilter;
 
     @RequestMapping(method = RequestMethod.GET)
+    @Relation("customer")
     public ResponseEntity getCurrent() {
 
         Optional<Customer> customer = currentCustomerProvider.getCustomer();
@@ -61,17 +63,17 @@ public class CustomerController implements SelfLinkSupplier {
 
         authorizedInvocationFilter.withRightsOn(
                 methodOn(getClass()).getCustomers(),
-                addLink(resource, "customers")
+                addLink(resource)
         );
 
         authorizedInvocationFilter.withRightsOn(
                 methodOn(getClass()).register(null),
-                addLink(resource, "register")
+                addLink(resource)
         );
 
         authorizedInvocationFilter.withRightsOn(
                 methodOn(getClass()).getCustomer(null),
-                addLink(resource, "customer")
+                addLink(resource)
         );
 
         return ResponseEntity.ok(resource);

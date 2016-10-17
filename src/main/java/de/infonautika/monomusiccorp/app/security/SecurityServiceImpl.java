@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SecurityServiceImpl implements SecurityService{
 
-    final Logger logger = LoggerFactory.getLogger(SecurityServiceImpl.class);
+    private final Logger logger = LoggerFactory.getLogger(SecurityServiceImpl.class);
 
     @Autowired
     private ModifiableUserDetailsManager userDetailsManager;
