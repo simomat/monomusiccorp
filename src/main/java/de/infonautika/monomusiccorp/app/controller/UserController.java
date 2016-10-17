@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.linkOn;
@@ -20,7 +21,7 @@ public class UserController {
     @Autowired
     private AuthenticationFacade authenticationFacade;
 
-    @RequestMapping("/currentuser")
+    @RequestMapping(value = "/currentuser", method = RequestMethod.GET)
     @Relation("user")
     public ResponseEntity currentUser() {
         return authenticationFacade.getCurrentUserName()

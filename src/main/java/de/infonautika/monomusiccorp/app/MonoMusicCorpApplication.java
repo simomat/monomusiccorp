@@ -1,9 +1,12 @@
 package de.infonautika.monomusiccorp.app;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
 import de.infonautika.monomusiccorp.app.business.ApplicationState;
 import de.infonautika.monomusiccorp.app.controller.utils.links.Relation;
-import de.infonautika.monomusiccorp.app.controller.utils.links.RelationMethodRegistry;
+import de.infonautika.monomusiccorp.app.controller.utils.links.curi.MethodCuriProvider;
+import de.infonautika.monomusiccorp.app.controller.utils.links.curi.RelationMethodRegistry;
 import de.infonautika.monomusiccorp.app.security.DefaultUsers;
 import de.infonautika.monomusiccorp.app.security.ModifiableUserDetailsManager;
 import de.infonautika.monomusiccorp.app.security.ModifiableUserDetailsManagerImpl;
@@ -116,6 +119,16 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
         return new RelationMethodRegistry();
     }
 
+    @Bean
+    public MethodCuriProvider methodCuriProvider() {
+        return new MethodCuriProvider();
+    }
+
+    @Bean
+    public JsonSchemaGenerator jsonSchemaGenerator() {
+        return new JsonSchemaGenerator(new ObjectMapper());
+    }
+
     @Configuration
     @EnableGlobalMethodSecurity(securedEnabled = true)
     @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
@@ -128,6 +141,7 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
         protected void configure(HttpSecurity http) throws Exception {
             String realmName = "Realm";
             http
+                    .headers().frameOptions().disable().and()
                     .csrf().disable()
                     .authorizeRequests()
                     .anyRequest().authenticated()

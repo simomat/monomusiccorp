@@ -1,5 +1,8 @@
-package de.infonautika.monomusiccorp.app.controller.utils.links;
+package de.infonautika.monomusiccorp.app.controller.utils.links.curi;
 
+import de.infonautika.monomusiccorp.app.controller.utils.links.Relation;
+import org.springframework.hateoas.core.AnnotationMappingDiscoverer;
+import org.springframework.hateoas.core.MappingDiscoverer;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.annotation.Annotation;
@@ -9,6 +12,9 @@ import java.util.*;
 import java.util.function.BiConsumer;
 
 public class RelationMethod {
+
+    private static final MappingDiscoverer MAPPING_DISCOVERER = new AnnotationMappingDiscoverer(RequestMapping.class);
+
     private Method method;
 
     public RelationMethod(Method method) {
@@ -71,6 +77,10 @@ public class RelationMethod {
     @Override
     public int hashCode() {
         return Objects.hash(method);
+    }
+
+    public String getUri() {
+        return MAPPING_DISCOVERER.getMapping(method);
     }
 }
 

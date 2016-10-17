@@ -59,7 +59,7 @@ public class StockController implements SelfLinkSupplier {
         return resource;
     }
 
-    @RequestMapping
+    @RequestMapping(method = RequestMethod.GET)
     @GetMapping
     @Secured({STOCK_MANAGER, ADMIN})
     @Relation("stockitems")
