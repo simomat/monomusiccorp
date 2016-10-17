@@ -16,7 +16,15 @@ Inspired by the example domain of "MusicCorp" appearing in Sam Newmans "Building
 - Spring Data JPA providing repositories etc. on top of JPA2 defined Entities
 - EclipseLink as JPA implementation
 - Apache Derby as database
-- UI: no UI, consider the level3 REST API as top level. To simplify testing of REST APIs and not using cUrl all the way, there is a REST+HAL browser included, borrowed from [Mike Melly](https://github.com/mikekelly/hal-browser).
+- UI: no UI, consider the level3 REST API as top level. See below for detailed description.
+
+#### REST API under the hood
+To reduce the overhead of maintaining a UI, `monomusiccorp` provides a HAL-based REST API as top-level. Because it is self-describing, this standard allows to "browse" the API for humans. Therefor, the REST+HAL browser borrowed from [Mike Melly](https://github.com/mikekelly/hal-browser) is included. It allows to follow related transitions and to customise HTTP methods and parameters. 
+
+###### HAL implementation
+In general, Spring-HATEOAS helps to manage resources and links, but link-building still lacks support of templates (which are described in the HAL standard). Also, a general support for an API description service ("CURIEs") is provided, but there's no automatic information gathering mechanism.
+
+To serve a well self-describing interface, both link building and CURIE information gathering in (re-)implemented in `monomusiccorp`. 
 
 #### Run it
 - Check it out the repository, go to path
