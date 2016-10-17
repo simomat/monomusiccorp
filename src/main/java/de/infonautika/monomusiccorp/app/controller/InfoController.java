@@ -20,7 +20,7 @@ public class InfoController {
     private AuthorizedInvocationFilter authorizedInvocationFilter;
 
     @RequestMapping(method = RequestMethod.GET)
-    @Relation("currentuser")
+    @Relation("api")
     public MessageResource getApi() {
 
         MessageResource messageResource = new MessageResource();
@@ -33,6 +33,7 @@ public class InfoController {
         messageResource.add(linkOn(methodOn(UserController.class).currentUser()).withGivenRel());
         addOrdersLinks(messageResource);
 
+        messageResource.add(linkOn(methodOn(getClass()).getApi()).withRelSelf());
         return messageResource;
     }
 
