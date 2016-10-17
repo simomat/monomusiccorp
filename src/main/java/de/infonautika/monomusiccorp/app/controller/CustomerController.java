@@ -5,7 +5,6 @@ import de.infonautika.monomusiccorp.app.business.CustomerInfo;
 import de.infonautika.monomusiccorp.app.controller.resources.CustomerResource;
 import de.infonautika.monomusiccorp.app.controller.resources.CustomerResourceAssembler;
 import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedInvocationFilter;
-import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
 import de.infonautika.monomusiccorp.app.controller.utils.links.Relation;
 import de.infonautika.monomusiccorp.app.domain.Customer;
 import de.infonautika.monomusiccorp.app.intermediate.CurrentCustomerProvider;
@@ -23,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.addLink;
+import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.createSelfLink;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.noContent;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.notFound;
 import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.linkOn;
@@ -31,7 +31,7 @@ import static de.infonautika.monomusiccorp.app.security.UserRole.ADMIN;
 
 @RestController
 @RequestMapping("/api/customer")
-public class CustomerController implements SelfLinkSupplier {
+public class CustomerController {
 
     @Autowired
     private BusinessProcess businessProcess;
@@ -58,7 +58,7 @@ public class CustomerController implements SelfLinkSupplier {
         }
 
         if (!hasSelfLink(resource)) {
-            addSelfLink(resource);
+            resource.add(createSelfLink(getClass()));
         }
 
         authorizedInvocationFilter.withRightsOn(

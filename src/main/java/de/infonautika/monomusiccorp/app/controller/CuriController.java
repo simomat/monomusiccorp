@@ -31,7 +31,7 @@ public class CuriController {
     @RequestMapping(value = "/{rel}", method = RequestMethod.GET)
     public ResponseEntity currentUser(@PathVariable("rel") String relationName) {
 
-        return relationMethodRegistry.getCuri(relationName)
+        return relationMethodRegistry.getMethod(relationName)
                 .map(methodCuriProvider::toCuriInfo)
                 .map(this::format)
                 .map(ResponseEntity::ok)

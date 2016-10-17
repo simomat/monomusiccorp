@@ -4,7 +4,6 @@ import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.errors.ForbiddenException;
 import de.infonautika.monomusiccorp.app.controller.resources.PositionResource;
 import de.infonautika.monomusiccorp.app.controller.resources.PositionResourceAssembler;
-import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
 import de.infonautika.monomusiccorp.app.controller.utils.links.Relation;
 import de.infonautika.monomusiccorp.app.domain.Customer;
 import de.infonautika.monomusiccorp.app.domain.Position;
@@ -25,7 +24,7 @@ import static de.infonautika.monomusiccorp.app.security.UserRole.CUSTOMER;
 
 @RestController
 @RequestMapping("/api/basket")
-public class ShoppingController implements SelfLinkSupplier {
+public class ShoppingController {
 
     @Autowired
     private BusinessProcess businessProcess;

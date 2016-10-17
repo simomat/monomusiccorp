@@ -6,7 +6,6 @@ import de.infonautika.monomusiccorp.app.controller.resources.OrderStatusResource
 import de.infonautika.monomusiccorp.app.controller.resources.OrderStatusResourceAssembler;
 import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedInvocationFilter;
 import de.infonautika.monomusiccorp.app.controller.utils.LinkSupport;
-import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
 import de.infonautika.monomusiccorp.app.controller.utils.links.Invocation;
 import de.infonautika.monomusiccorp.app.controller.utils.links.Relation;
 import de.infonautika.monomusiccorp.app.domain.Customer;
@@ -35,7 +34,7 @@ import static de.infonautika.monomusiccorp.app.security.UserRole.CUSTOMER;
 
 @RestController
 @RequestMapping("/api/orders")
-public class OrdersController implements SelfLinkSupplier {
+public class OrdersController {
 
     @Autowired
     private PickingOrderRepository pickingOrderRepository;

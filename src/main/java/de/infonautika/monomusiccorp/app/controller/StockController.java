@@ -3,7 +3,6 @@ package de.infonautika.monomusiccorp.app.controller;
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.controller.resources.StockItemResource;
 import de.infonautika.monomusiccorp.app.controller.resources.StockItemResourceAssembler;
-import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
 import de.infonautika.monomusiccorp.app.controller.utils.links.Relation;
 import de.infonautika.monomusiccorp.app.domain.StockItem;
 import de.infonautika.monomusiccorp.app.repository.StockItemRepository;
@@ -16,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.createSelfLink;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.noContent;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.notFound;
 import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.linkOn;
@@ -25,7 +25,7 @@ import static de.infonautika.monomusiccorp.app.security.UserRole.STOCK_MANAGER;
 
 @RestController
 @RequestMapping("/api/stock")
-public class StockController implements SelfLinkSupplier {
+public class StockController {
 
     @Autowired
     private BusinessProcess businessProcess;
@@ -71,7 +71,7 @@ public class StockController implements SelfLinkSupplier {
         });
 
         Resources<StockItemResource> stockItemResources = new Resources<>(stockItems);
-        addSelfLink(stockItemResources);
+        stockItemResources.add(createSelfLink(getClass()));
         stockItemResources.add(linkOn(methodOn(getClass()).addItemsToStock(null, null)).withGivenRel());
 
         return stockItemResources;

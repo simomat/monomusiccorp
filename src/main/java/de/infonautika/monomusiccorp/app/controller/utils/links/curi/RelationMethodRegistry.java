@@ -22,7 +22,7 @@ public class RelationMethodRegistry {
         methods.put(relation, relMethod);
     }
 
-    public Optional<RelationMethod> getCuri(String relationName) {
+    public Optional<RelationMethod> getMethod(String relationName) {
         return Optional.ofNullable(methods.get(relationName));
     }
 

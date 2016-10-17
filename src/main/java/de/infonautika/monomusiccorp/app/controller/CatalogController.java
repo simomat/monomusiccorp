@@ -3,7 +3,6 @@ package de.infonautika.monomusiccorp.app.controller;
 import de.infonautika.monomusiccorp.app.controller.resources.ProductResource;
 import de.infonautika.monomusiccorp.app.controller.resources.ProductResourceAssembler;
 import de.infonautika.monomusiccorp.app.controller.utils.AuthorizedInvocationFilter;
-import de.infonautika.monomusiccorp.app.controller.utils.SelfLinkSupplier;
 import de.infonautika.monomusiccorp.app.controller.utils.links.Relation;
 import de.infonautika.monomusiccorp.app.domain.Product;
 import de.infonautika.monomusiccorp.app.repository.ProductLookup;
@@ -19,13 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.addLink;
+import static de.infonautika.monomusiccorp.app.controller.utils.LinkSupport.createSelfLink;
 import static de.infonautika.monomusiccorp.app.controller.utils.Results.notFound;
 import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.linkOn;
 import static de.infonautika.monomusiccorp.app.controller.utils.links.LinkFacade.methodOn;
 
 @RestController
 @RequestMapping("/api/catalog")
-public class CatalogController implements SelfLinkSupplier {
+public class CatalogController {
 
     @Autowired
     private ProductLookup productLookup;
@@ -41,7 +41,7 @@ public class CatalogController implements SelfLinkSupplier {
         productResources.forEach(this::addProductLinks);
 
         Resources<ProductResource> resources = new Resources<>(productResources);
-        addSelfLink(resources);
+        resources.add(createSelfLink(getClass()));
 
         return resources;
     }
