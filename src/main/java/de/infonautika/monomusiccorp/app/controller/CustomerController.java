@@ -113,7 +113,7 @@ public class CustomerController {
 
     private CustomerResource toCustomerResource(Customer customer) {
         CustomerResource customerResource = new CustomerResourceAssembler(getClass()).toResource(customer);
-        customerResource.add(linkOn(methodOn(getClass()).getCustomer(customer.getUsername())).withRelSelf());
+        customerResource.add(linkOn(methodOn(getClass()).getCustomer(customer.getUser().getUsername())).withRelSelf());
         return customerResource;
     }
 

@@ -8,7 +8,7 @@ import de.infonautika.monomusiccorp.app.repository.CustomerRepository;
 import de.infonautika.monomusiccorp.app.repository.ProductRepository;
 import de.infonautika.monomusiccorp.app.repository.StockItemRepository;
 import de.infonautika.monomusiccorp.app.security.DefaultUsers;
-import de.infonautika.monomusiccorp.app.security.SecurityService;
+import de.infonautika.monomusiccorp.app.security.ModifiableUserDetailsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,17 +32,17 @@ public class ApplicationState {
     private BusinessProcess businessProcess;
 
     @Autowired
-    private SecurityService securityService;
+    private CustomerRepository cusomerRepository;
 
     @Autowired
-    private CustomerRepository cusomerRepository;
+    private ModifiableUserDetailsManager userManager;
 
     public void dropState() {
         logger.info("dropping application state");
         stockItemRepository.deleteAll();
         productRepo.deleteAll();
         cusomerRepository.deleteAll();
-        securityService.deleteUsers();
+        userManager.deleteUsers();
     }
 
     public void createState() {
@@ -64,7 +64,7 @@ public class ApplicationState {
         productRepo.save(asList(products));
         stockItemRepository.save(asList(stocks));
 
-        securityService.addUser(DefaultUsers.ADMIN);
+        userManager.createUser(DefaultUsers.ADMIN);
         businessProcess.addCustomer(new CustomerInfo("hans", "hans", "Hechtstr. 21, 01097 Dresden"));
     }
 }

@@ -1,14 +1,16 @@
 package de.infonautika.monomusiccorp.app.business;
 
 
+import de.infonautika.monomusiccorp.app.business.errors.ConflictException;
 import de.infonautika.monomusiccorp.app.business.errors.DoesNotExistException;
 import de.infonautika.monomusiccorp.app.domain.*;
 import de.infonautika.monomusiccorp.app.repository.*;
-import de.infonautika.monomusiccorp.app.security.SecurityService;
+import de.infonautika.monomusiccorp.app.security.UserRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -39,9 +41,6 @@ public class BusinessProcessImpl implements BusinessProcess {
     private ShoppingBasketRepository shoppingBasketRepository;
 
     @Autowired
-    private SecurityService securityService;
-
-    @Autowired
     private CustomerLookup customerLookup;
 
     @Autowired
@@ -55,6 +54,9 @@ public class BusinessProcessImpl implements BusinessProcess {
 
     @Autowired
     private InvoiceDelivery invoiceDelivery;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     public void addItemToStock(String productId, Long quantity) {
@@ -90,7 +92,7 @@ public class BusinessProcessImpl implements BusinessProcess {
         ifPresent(productLookup.findOne(productId),
                 product -> updateShoppingBasket(customer, product, quantity))
         .orElseThrow(() -> {
-                logger.debug("tried to put {} to basket of {}, but product does not exist", productId, customer.getUsername());
+                logger.debug("tried to put {} to basket of {}, but product does not exist", productId, customer.getUser());
                 return new DoesNotExistException("product " + productId);
             });
     }
@@ -99,7 +101,7 @@ public class BusinessProcessImpl implements BusinessProcess {
         ShoppingBasket shoppingBasket = customer.getShoppingBasket();
         shoppingBasket.put(product, quantity);
         shoppingBasketRepository.save(shoppingBasket);
-        logger.debug("customer {} put {} to basket", customer.getUsername(), quantity);
+        logger.debug("customer {} put {} to basket", customer.getUser(), quantity);
     }
 
     @Override
@@ -107,21 +109,32 @@ public class BusinessProcessImpl implements BusinessProcess {
         ShoppingBasket shoppingBasket = customer.getShoppingBasket();
         shoppingBasket.remove(productId, quantity);
         shoppingBasketRepository.save(shoppingBasket);
-        logger.debug("customer {} removed {} of {} from basket", customer.getUsername(), quantity, productId);
+        logger.debug("customer {} removed {} of {} from basket", customer.getUser(), quantity, productId);
     }
 
     @Override
+    @Transactional
     public void addCustomer(CustomerInfo customer)  {
-        securityService.addUser(customer);
-        createCustomerAndSave(customer);
+        if (userRepository.exists(customer.getUsername())) {
+            throw new ConflictException("a user with " + customer.getUsername() + " already exists");
+        }
+        createCustomerAndSave(toCustomerUser(customer), customer);
         logger.info("customer {} added", customer.getUsername());
+    }
+
+    private User toCustomerUser(CustomerInfo customer) {
+        User user = new User();
+        user.setUsername(customer.getUsername());
+        user.setPassword(customer.getPassword());
+        user.addRole(UserRole.CUSTOMER);
+        return user;
     }
 
     @Override
     public void submitOrder(Customer customer) {
         ShoppingBasket shoppingBasket = customer.getShoppingBasket();
         if (shoppingBasket.isEmpty()) {
-            logger.debug("rejected submit an order with empty basket for customer {}", customer.getUsername());
+            logger.debug("rejected submit an order with empty basket for customer {}", customer.getUser());
             throw new DoesNotExistException("no items in basket");
         }
 
@@ -133,7 +146,7 @@ public class BusinessProcessImpl implements BusinessProcess {
     private Order createAndSaveOrder(Customer customer, ShoppingBasket shoppingBasket) {
         Order order = createOrder(customer);
         orderRepository.save(order);
-        logger.debug("created order for customer {} with {}", customer.getUsername(), shoppingBasket.getPositions());
+        logger.debug("created order for customer {} with {}", customer.getUser(), shoppingBasket.getPositions());
         return order;
     }
 
@@ -171,7 +184,7 @@ public class BusinessProcessImpl implements BusinessProcess {
         pickingOrder.setStatus(PickingOrder.PickingStatus.OPEN);
         pickingOrder.setOrder(order);
         pickingOrderRepository.save(pickingOrder);
-        logger.debug("created picking order for customer {} with {}", order.getCustomer().getUsername(), order.getPositions());
+        logger.debug("created picking order for customer {} with {}", order.getCustomer().getUser(), order.getPositions());
         return pickingOrder;
     }
 
@@ -210,9 +223,9 @@ public class BusinessProcessImpl implements BusinessProcess {
         return pricedPosition;
     }
 
-    private void createCustomerAndSave(CustomerInfo customerInfo) {
+    private void createCustomerAndSave(User user, CustomerInfo customerInfo) {
         Customer customer = new Customer();
-        customer.setUsername(customerInfo.getUsername());
+        customer.setUser(user);
         customer.setAddress(new Address(customerInfo.getAddress()));
         customerLookup.save(customer);
     }

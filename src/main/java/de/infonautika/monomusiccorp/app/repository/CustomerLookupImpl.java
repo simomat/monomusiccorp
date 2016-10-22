@@ -24,7 +24,7 @@ public class CustomerLookupImpl implements CustomerLookup {
 
     @Override
     public Optional<Customer> getCustomerByName(String userName) {
-        return Optional.ofNullable(customerRepository.findByUsername(userName));
+        return Optional.ofNullable(customerRepository.findByUserUsername(userName));
     }
 
     @Override

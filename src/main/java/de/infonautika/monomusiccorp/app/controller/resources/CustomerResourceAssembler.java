@@ -12,7 +12,7 @@ public class CustomerResourceAssembler extends ResourceAssemblerSupport<Customer
     public CustomerResource toResource(Customer customer) {
         CustomerResource customerResource = new CustomerResource();
         customerResource.setCustomerId(customer.getId());
-        customerResource.setUsername(customer.getUsername());
+        customerResource.setUsername(customer.getUser().getUsername());
         customerResource.setAddress(customer.getAddress());
         return customerResource;
     }

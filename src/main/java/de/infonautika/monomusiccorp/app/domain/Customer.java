@@ -9,8 +9,9 @@ public class Customer {
     @GeneratedValue
     private String id;
 
-    @Column(unique=true)
-    private String username;
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
+    private User user;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @PrimaryKeyJoinColumn
@@ -18,10 +19,6 @@ public class Customer {
 
     @Embedded
     private Address address;
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     public String getId() {
         return id;
@@ -39,15 +36,19 @@ public class Customer {
         this.address = address;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
     public void setId(String id) {
         this.id = id;
     }
 
     public void setShoppingBasket(ShoppingBasket shoppingBasket) {
         this.shoppingBasket = shoppingBasket;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

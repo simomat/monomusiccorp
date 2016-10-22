@@ -9,7 +9,7 @@ import de.infonautika.monomusiccorp.app.controller.utils.links.curi.MethodCuriPr
 import de.infonautika.monomusiccorp.app.controller.utils.links.curi.RelationMethodRegistry;
 import de.infonautika.monomusiccorp.app.security.DefaultUsers;
 import de.infonautika.monomusiccorp.app.security.ModifiableUserDetailsManager;
-import de.infonautika.monomusiccorp.app.security.ModifiableUserDetailsManagerImpl;
+import de.infonautika.monomusiccorp.app.security.UserManager;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -163,7 +163,7 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
         @Bean
         public ModifiableUserDetailsManager getUserDetailsManager() {
             if (userDetailsManager == null) {
-                userDetailsManager = new ModifiableUserDetailsManagerImpl();
+                userDetailsManager = new UserManager();
                 userDetailsManager.createUser(DefaultUsers.ADMIN);
             }
             return userDetailsManager;

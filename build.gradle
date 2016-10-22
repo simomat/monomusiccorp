@@ -50,7 +50,7 @@ dependencies {
         exclude group: 'org.hibernate', module: 'hibernate-entitymanager'
     }
 
-    compile('de.infonautika.streamjoin:streamjoin:1.0.0-beta')
+    compile('de.infonautika.streamjoin:streamjoin:1.0.0')
 
     testCompile('junit:junit:4.12')
     testCompile('org.hamcrest:hamcrest-core:1.3')

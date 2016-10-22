@@ -5,7 +5,6 @@ import de.infonautika.monomusiccorp.app.business.errors.ConflictException;
 import de.infonautika.monomusiccorp.app.business.errors.DoesNotExistException;
 import de.infonautika.monomusiccorp.app.domain.*;
 import de.infonautika.monomusiccorp.app.repository.*;
-import de.infonautika.monomusiccorp.app.security.SecurityService;
 import org.hamcrest.Matcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,9 +52,6 @@ public class BusinessProcessImplTest {
     private ShoppingBasketRepository shoppingBasketRepository;
 
     @Mock
-    private SecurityService securityService;
-
-    @Mock
     private CustomerLookup customerLookup;
 
     @Mock
@@ -70,6 +66,9 @@ public class BusinessProcessImplTest {
     @Mock
     private InvoiceDelivery invoiceDelivery;
 
+    @Mock
+    private UserRepository userRepository;
+
     @Captor
     private ArgumentCaptor<PickingOrder> pickingOrderCaptor;
     @Captor
@@ -83,7 +82,7 @@ public class BusinessProcessImplTest {
 
     @Test(expected = ConflictException.class)
     public void addCustomerWithExistingNameFails() throws Exception {
-        doThrow(ConflictException.class).when(securityService).addUser(any());
+        doReturn(true).when(userRepository).exists(anyString());
 
         businessProcess.addCustomer(hans);
     }
@@ -92,8 +91,7 @@ public class BusinessProcessImplTest {
     public void addCustomerSavesUserAndCustomer() throws Exception {
         businessProcess.addCustomer(hans);
 
-        verify(securityService).addUser(hans);
-        verify(customerLookup).save(argThat(customer -> customer.getUsername().equals("hans")));
+        verify(customerLookup).save(argThat(customer -> customer.getUser().getUsername().equals("hans")));
     }
 
     // TODO: 11.10.16 add test for atomicity

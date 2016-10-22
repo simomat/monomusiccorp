@@ -3,6 +3,7 @@ package de.infonautika.monomusiccorp.app.controller;
 import de.infonautika.monomusiccorp.app.business.BusinessProcess;
 import de.infonautika.monomusiccorp.app.business.errors.ConflictException;
 import de.infonautika.monomusiccorp.app.domain.Customer;
+import de.infonautika.monomusiccorp.app.domain.User;
 import de.infonautika.monomusiccorp.app.repository.CustomerLookup;
 import de.infonautika.monomusiccorp.app.security.AuthenticationFacade;
 import org.junit.Before;
@@ -62,8 +63,10 @@ public class CustomerControllerTest {
 
     @Test
     public void getCustomerHasSelfLink() throws Exception {
+        User user = new User();
+        user.setUsername("hans");
         Customer customer = new Customer();
-        customer.setUsername("hans");
+        customer.setUser(user);
         doReturn(Optional.of(customer)).when(customerLookup).getCustomerByName(any());
 
         mvc.perform(get("/api/customer/hans").accept(MediaType.APPLICATION_JSON))
