@@ -5,9 +5,11 @@ import de.infonautika.monomusiccorp.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+@Component
 public class UserManager implements ModifiableUserDetailsManager {
 
     @Autowired

@@ -7,9 +7,6 @@ import de.infonautika.monomusiccorp.app.business.ApplicationState;
 import de.infonautika.monomusiccorp.app.controller.utils.links.Relation;
 import de.infonautika.monomusiccorp.app.controller.utils.links.curi.MethodCuriProvider;
 import de.infonautika.monomusiccorp.app.controller.utils.links.curi.RelationMethodRegistry;
-import de.infonautika.monomusiccorp.app.security.DefaultUsers;
-import de.infonautika.monomusiccorp.app.security.ModifiableUserDetailsManager;
-import de.infonautika.monomusiccorp.app.security.UserManager;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -82,13 +79,13 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
     }
 
     private void initApplicationState(WebApplicationContext ctx) {
-        ApplicationState applicationState = (ApplicationState) ctx.getBean("applicationState");
+        ApplicationState applicationState = ctx.getBean("applicationState", ApplicationState.class);
         applicationState.dropState();
         applicationState.createState();
     }
 
     private void initRelationMethodRegistry(WebApplicationContext ctx) {
-        RelationMethodRegistry registry = (RelationMethodRegistry) ctx.getBean("relationMethodRegistry");
+        RelationMethodRegistry registry = ctx.getBean("relationMethodRegistry", RelationMethodRegistry.class);
         getRelationMethodsInControllers().forEach(registry::register);
     }
 
@@ -134,9 +131,6 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
     @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
     protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
 
-        private ModifiableUserDetailsManager userDetailsManager;
-
-
         @Override
         protected void configure(HttpSecurity http) throws Exception {
             String realmName = "Realm";
@@ -157,16 +151,6 @@ public class MonoMusicCorpApplication extends JpaBaseConfiguration {
                             response.setContentType("application/json;charset=UTF-8");
                             response.getWriter().write("{\"redirect\": \"/\"}");
                         });
-        }
-
-
-        @Bean
-        public ModifiableUserDetailsManager getUserDetailsManager() {
-            if (userDetailsManager == null) {
-                userDetailsManager = new UserManager();
-                userDetailsManager.createUser(DefaultUsers.ADMIN);
-            }
-            return userDetailsManager;
         }
 
     }

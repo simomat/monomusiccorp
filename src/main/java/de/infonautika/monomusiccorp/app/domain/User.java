@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toSet;
 
 @Entity
+@Table(name = "xUSER")
 public class User implements UserDetails{
 
     @Id
@@ -46,7 +47,7 @@ public class User implements UserDetails{
 
     @Override
     public boolean isAccountNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
