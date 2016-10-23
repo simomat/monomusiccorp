@@ -1,5 +1,67 @@
 package de.infonautika.monomusiccorp.app.security;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+
+import static de.infonautika.monomusiccorp.app.security.UserRole.toAuthorities;
+import static java.util.Collections.unmodifiableCollection;
+
 public class DefaultUsers {
-    public static final MutableUserDetails ADMIN = MutableUserDetails.create("admin", "admin", UserRole.ADMIN, UserRole.STOCK_MANAGER);
+    public static final UserDetails ADMIN = DefaultUserDetails.create("admin", "admin", UserRole.ADMIN, UserRole.STOCK_MANAGER);
+
+    private static class DefaultUserDetails implements UserDetails{
+        private final String username;
+        private String password;
+        private final Collection<? extends GrantedAuthority> authorities;
+
+        private DefaultUserDetails(String username, String password, Collection<? extends GrantedAuthority> authorities) {
+            this.username = username;
+            this.password = password;
+            this.authorities = authorities;
+        }
+
+        @Override
+        public Collection<? extends GrantedAuthority> getAuthorities() {
+            return unmodifiableCollection(authorities);
+        }
+
+        @Override
+        public String getPassword() {
+            return password;
+        }
+
+        @Override
+        public String getUsername() {
+            return username;
+        }
+
+        @Override
+        public boolean isAccountNonExpired() {
+            return true;
+        }
+
+        @Override
+        public boolean isAccountNonLocked() {
+            return true;
+        }
+
+        @Override
+        public boolean isCredentialsNonExpired() {
+            return true;
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return true;
+        }
+
+        public static DefaultUserDetails create(String username, String password, String... roles) {
+            return new DefaultUserDetails(
+                    username,
+                    password,
+                    toAuthorities(roles));
+        }
+    }
 }
